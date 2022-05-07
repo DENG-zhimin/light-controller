@@ -348,7 +348,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@import '@radial-color-picker/vue-color-picker/dist/vue-color-picker.min.css';
+@import '@radial-color-picker/vue-color-picker/dist/vue-color-picker.css';
 
 .dialog-frame {
   min-width: 300px;
