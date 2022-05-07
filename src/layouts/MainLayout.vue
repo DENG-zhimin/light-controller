@@ -2,9 +2,12 @@
   <q-layout view="lHh Lpr lFf">
     <q-header elevated>
       <q-toolbar>
+        <!-- <q-toolbar-title></q-toolbar-title> -->
         <q-space></q-space>
-        <q-toolbar-title>Flashlight Controller </q-toolbar-title>
-
+        <div class="row justify-center text-bold">
+          Flashlight Controller
+        </div>
+          <q-space></q-space>
         <div>AOI Ltd.</div>
       </q-toolbar>
     </q-header>

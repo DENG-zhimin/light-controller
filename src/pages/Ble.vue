@@ -12,17 +12,10 @@
         >信息</q-btn
       >
     </div>
-    <!-- <div class="q-my-md">
-      <q-input outlined dense v-model="QRWidth" type="number">
-          <template v-slot:before>
-            <label class="text-weight-thin input-label" for="">二维码宽度</label>
-          </template>
-        </q-input>
-    </div> -->
     <div
       class="col column q-gutter-y-sm q-pa-sm shadow-1 q-ma-xs items-center full-width"
     >
-      <div class="col q-gutter-y-sm" v-if="connectedDev.length > 0">
+      <div class="q-my-lg q-gutter-y-sm" v-if="connectedDev.length > 0">
         已连接设备：
         <q-card v-for="(ble, index) in connectedDev" :key="index">
           <q-card-section
@@ -37,15 +30,20 @@
           </q-card-section>
         </q-card>
       </div>
-      <div v-else>
+      <div v-else class="q-my-lg">
         蓝牙未连接
         <div v-if="error" class="row">
           {{ error }}
         </div>
       </div>
       <!-- control panel -->
+<<<<<<< HEAD
       <div class="column items-center q-mt-md">
+        <div class=" q-mb-xl ">
+=======
+      <div class="column items-center q-mt-xl">
         <div class="row justify-center q-mb-lg">
+>>>>>>> 38021dc8872f0ba66d2d79ffa6fb82ecd4d7c7d1
           <q-btn-toggle
             v-model="fmode"
             push
@@ -64,7 +62,6 @@
         <div>
           {{ rgb }}
         </div>
-        <div :style="mycolor"></div>
       </div>
     </div>
     <q-dialog v-model="showSrvs" ref="srvsListDialog ">

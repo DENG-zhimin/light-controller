@@ -5,7 +5,9 @@
   "author": "it02 <it02@aoi-bj.cn>",
   "private": true,
   "dependencies": {
-    "@capacitor/cli": "^2.0.0",
-    "@capacitor/core": "^2.0.0"
+    "@capacitor-community/bluetooth-le": "^1.8.2",
+    "@capacitor/android": "^3.5.0",
+    "@capacitor/cli": "^3.5.0",
+    "@capacitor/core": "^3.5.0"
   }
 }
