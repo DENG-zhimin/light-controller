@@ -55,7 +55,9 @@
             :options="fmodeOpt"
           />
         </div>
-        <color-picker v-bind="color" @input="onColorSelect"> </color-picker>
+        <color-picker v-bind="color" @input="onColorSelect"
+          variant="persistent"
+        > </color-picker>
         <div class="row justify q-my-lg">
           {{ color }}
         </div>
@@ -98,7 +100,9 @@ import { useQuasar } from 'quasar';
 import BleConn from './BleConn.vue';
 import SrvsList from './BleSrvs.vue';
 import ColorPicker from '@radial-color-picker/vue-color-picker';
-import { hslToRgb } from 'src/utils/util';
+// import { hslToRgb } from 'src/utils/util';
+import Convert from 'color-convert'
+
 
 export default defineComponent({
   name: 'BleDev',
@@ -157,7 +161,7 @@ export default defineComponent({
 
     const onColorSelect = (hue: number) => {
       color.hue = hue;
-      rgb.value = hslToRgb(hue);
+      rgb.value = Convert.hsl.rgb([hue, 100, 50])
       mycolor.value =
         'width: 100px; height: 100px; background: rgb(' +
         rgb.value[0] +

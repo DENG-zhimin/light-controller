@@ -1,0 +1,11 @@
+{
+  "name": "fcontroller",
+  "version": "0.0.1",
+  "description": "Flashlight Remote Controller",
+  "author": "it02 <it02@aoi-bj.cn>",
+  "private": true,
+  "dependencies": {
+    "@capacitor/cli": "^2.0.0",
+    "@capacitor/core": "^2.0.0"
+  }
+}

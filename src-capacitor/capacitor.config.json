@@ -1,0 +1,7 @@
+{
+  "appId": "org.capacitor.fc.app",
+  "appName": "Flashlight Controller",
+  "bundledWebRuntime": false,
+  "npmClient": "npm",
+  "webDir": "www"
+}
