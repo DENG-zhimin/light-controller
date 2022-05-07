@@ -37,13 +37,8 @@
         </div>
       </div>
       <!-- control panel -->
-<<<<<<< HEAD
       <div class="column items-center q-mt-md">
-        <div class=" q-mb-xl ">
-=======
-      <div class="column items-center q-mt-xl">
-        <div class="row justify-center q-mb-lg">
->>>>>>> 38021dc8872f0ba66d2d79ffa6fb82ecd4d7c7d1
+        <div class="q-mb-xl">
           <q-btn-toggle
             v-model="fmode"
             push
@@ -53,9 +48,12 @@
             :options="fmodeOpt"
           />
         </div>
-        <color-picker v-bind="color" @input="onColorSelect"
+        <color-picker
+          v-bind="color"
+          @input="onColorSelect"
           variant="persistent"
-        > </color-picker>
+        >
+        </color-picker>
         <div class="row justify q-my-lg">
           {{ color }}
         </div>
@@ -98,8 +96,7 @@ import BleConn from './BleConn.vue';
 import SrvsList from './BleSrvs.vue';
 import ColorPicker from '@radial-color-picker/vue-color-picker';
 // import { hslToRgb } from 'src/utils/util';
-import Convert from 'color-convert'
-
+import Convert from 'color-convert';
 
 export default defineComponent({
   name: 'BleDev',
@@ -158,7 +155,7 @@ export default defineComponent({
 
     const onColorSelect = (hue: number) => {
       color.hue = hue;
-      rgb.value = Convert.hsl.rgb([hue, 100, 50])
+      rgb.value = Convert.hsl.rgb([hue, 100, 50]);
       mycolor.value =
         'width: 100px; height: 100px; background: rgb(' +
         rgb.value[0] +
