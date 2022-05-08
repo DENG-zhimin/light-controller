@@ -13,9 +13,9 @@
       >
     </div>
     <div
-      class="col column q-gutter-y-sm q-pa-sm shadow-1 q-ma-xs items-center full-width"
+      class="col column q-gutter-y-sm shadow-1 q-ma-xs items-center full-width"
     >
-      <div class="q-my-lg q-gutter-y-sm" v-if="connectedDev.length > 0">
+      <div class="q-my-md q-gutter-y-sm" v-if="connectedDev.length > 0">
         已连接设备：
         <q-card v-for="(ble, index) in connectedDev" :key="index">
           <q-card-section
@@ -30,22 +30,23 @@
           </q-card-section>
         </q-card>
       </div>
-      <div v-else class="q-my-lg">
-        蓝牙未连接
-        <div v-if="error" class="row">
+      <div v-else class="q-my-sm">
+        未连接设备
+        <!-- <div v-if="error" class="row">
           {{ error }}
-        </div>
+        </div> -->
       </div>
       <!-- control panel -->
       <div class="column items-center q-mt-md">
-        <div class="q-mb-xl">
+        <div class="q-mb-lg full-width">
           <q-btn-toggle
             v-model="fmode"
             push
             color="grey-5"
-            toggle-color="yellow"
-            toggle-text-color="red"
+            toggle-color="grey-2"
+            toggle-text-color="grey-7"
             :options="fmodeOpt"
+            class="full-width"
           />
         </div>
         <color-picker
@@ -54,16 +55,13 @@
           variant="persistent"
         >
         </color-picker>
-        <div class="column q-my-xl q-gutter-y-md">
-          <div class="row justify-start text-red text-h6 text-bold">
-            红： {{ rgb[0] }}
-          </div>
-          <div class="row justify-start text-green text-h6 text-bold">
-            绿： {{ rgb[1] }}
-          </div>
-          <div class="row justify-start text-blue text-h6 text-bold">
-            蓝： {{ rgb[2] }}
-          </div>
+        <div class="row q-pl-md text-h6 q-mt-lg" style="width: 80%">
+          <div class="col-1 text-red">红:</div>
+          <div class="col-3 text-center text-red">{{ rgb[0] }}</div>
+          <div class="col-1 text-green">绿:</div>
+          <div class="col-3 text-green-9 text-center">{{ rgb[1] }}</div>
+          <div class="col-1 text-blue-9">蓝:</div>
+          <div class="col-3 text-blue-9 text-center">{{ rgb[2] }}</div>
         </div>
       </div>
     </div>

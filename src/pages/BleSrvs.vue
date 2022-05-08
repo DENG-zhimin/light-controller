@@ -1,5 +1,5 @@
 <template>
-  <div class="row bg-white" v-if="bleSrvs.length > 0">
+  <div class="column bg-white" v-if="bleSrvs.length > 0">
     <div
       class="col column q-my-sm q-gutter-y-sm"
       v-for="(srv, index) in bleSrvs"
