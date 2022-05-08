@@ -10,7 +10,7 @@
           {{ 'uuid: ' + srv.uuid }}
         </div>
         <div>
-          'characteristics: '
+          characteristics:
           <div
             class="col q-ml-md shadow-1 q-mb-md"
             v-for="(chr, index) in srv.characteristics"
