@@ -77,8 +77,8 @@
           <q-space />
           <q-btn dense flat icon="close" v-close-popup />
         </q-bar>
-        <Ble-Conn @bleConnected="bleConnected" @bleDisConnected="disConn">
-        </Ble-Conn>
+        <ble-conn @bleConnected="bleConnected" @bleDisConnected="disConn">
+        </ble-conn>
       </div>
     </q-dialog>
   </q-page>
