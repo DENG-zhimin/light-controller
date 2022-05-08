@@ -54,11 +54,16 @@
           variant="persistent"
         >
         </color-picker>
-        <div class="row justify q-my-lg">
-          {{ color }}
-        </div>
-        <div>
-          {{ rgb }}
+        <div class="column q-my-xl q-gutter-y-md">
+          <div class="row justify-start text-red text-h6 text-bold">
+            红： {{ rgb[0] }}
+          </div>
+          <div class="row justify-start text-green text-h6 text-bold">
+            绿： {{ rgb[1] }}
+          </div>
+          <div class="row justify-start text-blue text-h6 text-bold">
+            蓝： {{ rgb[2] }}
+          </div>
         </div>
       </div>
     </div>
@@ -148,7 +153,7 @@ export default defineComponent({
     });
 
     // rgb color
-    const rgb = ref([100, 100, 100]);
+    const rgb = ref(Convert.hsl.rgb(50, 100, 50));
     const mycolor = ref(
       'width: 100px; height: 100px; background: rgb(100,100,100)'
     );
