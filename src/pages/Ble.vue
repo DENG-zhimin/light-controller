@@ -48,7 +48,7 @@
               v-model="lVolume"
               :min="0"
               :max="100"
-              thumb-size="26px"
+              thumb-size="20px"
               track-size="16px"
               color="grey-2"
             >
@@ -75,19 +75,19 @@
           <div class="row item-center q-gutter-y-sm text-grey-8">
             <div class="full-width row col-12 justify-center">
               <div class="col-4">开关状态:</div>
-              <div class="col-6">{{ powerStat }}</div>
+              <div class="col-7">{{ powerStat }}</div>
             </div>
             <div class="full-width row col-12 justify-center">
               <div class="col-4">亮度:</div>
-              <div class="col-6">{{ lVolume }}</div>
+              <div class="col-7">{{ lVolume }}</div>
             </div>
             <div class="full-width row col-12 justify-center">
               <div class="col-4">模式：</div>
-              <div class="col-6">{{ fmode }}</div>
+              <div class="col-7">{{ fmode }}</div>
             </div>
             <div class="full-width row col-12 justify-center">
               <div class="col-4">RGB 色彩：</div>
-              <div class="col-6">{{ rgb }}</div>
+              <div class="col-7">{{ rgb }}</div>
             </div>
           </div>
         </div>
@@ -173,7 +173,7 @@ export default defineComponent({
       { label: 'L', value: 'L' },
       { label: 'F1', value: 'F1' },
       { label: 'F2', value: 'F2' },
-      { label: 'sos', value: 'sos' },
+      { label: 'sos', value: 'SOS' },
     ]);
 
     // light color
