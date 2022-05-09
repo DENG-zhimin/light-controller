@@ -1,5 +1,5 @@
 <template>
-  <q-page class="column items-center">
+  <q-page class="column items-center bg-grey-4">
     <div class="row input-inline q-justify-center q-gutter-sm q-my-sm q-pa-sm">
       <q-btn color="primary" :disable="error !== ''" @click="conn">连接</q-btn>
       <q-btn
@@ -30,18 +30,34 @@
           </q-card-section>
         </q-card>
       </div>
-      <div v-else class="q-my-sm">
-        未连接设备
-        <!-- <div v-if="error" class="row">
-          {{ error }}
-        </div> -->
-      </div>
+      <div v-else class="q-my-sm">未连接设备</div>
       <!-- control panel -->
       <div class="column items-center q-mt-md">
-        <div class="q-mb-lg full-width">
+        <div class="row justify-center q-mb-md">
+          <q-btn
+            round
+            :icon="powerStat ? 'las la-sun ' : 'las la-power-off'"
+            :color="powerStat ? 'grey-2' : 'grey-6'"
+            :text-color="powerStat ? 'grey-6' : 'grey-2'"
+            @click.stop="powerStat = !powerStat"
+          />
+        </div>
+        <div class="row full-width justify-center q-mb-md">
+          <div class="col-7">
+            <q-slider
+              v-model="lVolume"
+              :min="0"
+              :max="100"
+              thumb-size="26px"
+              track-size="16px"
+              color="grey-2"
+            >
+            </q-slider>
+          </div>
+        </div>
+        <div class="q-mb-lg">
           <q-btn-toggle
             v-model="fmode"
-            push
             color="grey-5"
             toggle-color="grey-2"
             toggle-text-color="grey-7"
@@ -55,13 +71,25 @@
           variant="persistent"
         >
         </color-picker>
-        <div class="row q-pl-md text-h6 q-mt-lg" style="width: 80%">
-          <div class="col-1 text-red">红:</div>
-          <div class="col-3 text-center text-red">{{ rgb[0] }}</div>
-          <div class="col-1 text-green">绿:</div>
-          <div class="col-3 text-green-9 text-center">{{ rgb[1] }}</div>
-          <div class="col-1 text-blue-9">蓝:</div>
-          <div class="col-3 text-blue-9 text-center">{{ rgb[2] }}</div>
+        <div class="row q-pl-md q-mt-xl" style="width: 80%">
+          <div class="row item-center q-gutter-y-sm text-grey-8">
+            <div class="full-width row col-12 justify-center">
+              <div class="col-4">开关状态:</div>
+              <div class="col-6">{{ powerStat }}</div>
+            </div>
+            <div class="full-width row col-12 justify-center">
+              <div class="col-4">亮度:</div>
+              <div class="col-6">{{ lVolume }}</div>
+            </div>
+            <div class="full-width row col-12 justify-center">
+              <div class="col-4">模式：</div>
+              <div class="col-6">{{ fmode }}</div>
+            </div>
+            <div class="full-width row col-12 justify-center">
+              <div class="col-4">RGB 色彩：</div>
+              <div class="col-6">{{ rgb }}</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -131,12 +159,18 @@ export default defineComponent({
     const ble_enabled = ref(false);
     // const see_all = ref(false)
     const error = ref('');
+
+    const powerStat = ref(false);
+
+    // light volume
+    const lVolume = ref(50);
+
+    // 手电工作模式
+    const fmode = ref('L');
+
     // device mode
     const fmodeOpt = ref([
-      { label: '100', value: '100' },
-      { label: '75', value: '75' },
-      { label: '50', value: '50' },
-      { label: '25', value: '25' },
+      { label: 'L', value: 'L' },
       { label: 'F1', value: 'F1' },
       { label: 'F2', value: 'F2' },
       { label: 'sos', value: 'sos' },
@@ -150,26 +184,13 @@ export default defineComponent({
       // alpha: 1,
     });
 
-    // rgb color
+    // default rgb color
     const rgb = ref(Convert.hsl.rgb(50, 100, 50));
-    const mycolor = ref(
-      'width: 100px; height: 100px; background: rgb(100,100,100)'
-    );
 
     const onColorSelect = (hue: number) => {
       color.hue = hue;
       rgb.value = Convert.hsl.rgb([hue, 100, 50]);
-      mycolor.value =
-        'width: 100px; height: 100px; background: rgb(' +
-        rgb.value[0] +
-        ',' +
-        rgb.value[1] +
-        ',' +
-        rgb.value[2] +
-        ')';
     };
-
-    const fmode = ref('100');
 
     // 已经连接蓝牙设备服务
     // const bleSrvs = reactive(<BleService[]>[]);
@@ -335,7 +356,8 @@ export default defineComponent({
       error,
       color,
       rgb,
-      mycolor, // style
+      lVolume, // light volume, luminosity
+      powerStat, // power status
       onColorSelect,
       conn,
       disConn,
