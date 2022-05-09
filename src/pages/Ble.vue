@@ -71,23 +71,26 @@
           variant="persistent"
         >
         </color-picker>
-        <div class="row q-pl-md q-mt-xl" style="width: 85%">
-          <div class="row item-center q-gutter-y-sm text-grey-8">
+        <div
+          class="row q-pl-md q-mt-md q-mb-sm inset-shadow-down shadow-2 bg-grey-5 text-grey-7 q-py-sm display-box"
+          style="width: 70%"
+        >
+          <div class="row item-center q-gutter-y-sm">
             <div class="full-width row col-12 justify-center">
-              <div class="col-4">开关状态:</div>
-              <div class="col-7">{{ powerStat }}</div>
+              <div class="col-4 text-right">开关状态：</div>
+              <div class="col-7 q-pl-md">{{ powerStat ? 'ON' : 'OFF' }}</div>
             </div>
             <div class="full-width row col-12 justify-center">
-              <div class="col-4">亮度:</div>
-              <div class="col-7">{{ lVolume }}</div>
+              <div class="col-4 text-right">亮度：</div>
+              <div class="col-7 q-pl-md">{{ lVolume }}</div>
             </div>
             <div class="full-width row col-12 justify-center">
-              <div class="col-4">模式：</div>
-              <div class="col-7">{{ fmode }}</div>
+              <div class="col-4 text-right">模式：</div>
+              <div class="col-7 q-pl-md">{{ fmode }}</div>
             </div>
             <div class="full-width row col-12 justify-center">
-              <div class="col-4">RGB 色彩：</div>
-              <div class="col-7">{{ rgb }}</div>
+              <div class="col-4 text-right">RGB 色彩：</div>
+              <div class="col-7 q-pl-md">{{ rgb }}</div>
             </div>
           </div>
         </div>
@@ -380,5 +383,10 @@ export default defineComponent({
   min-height: 500px;
   max-height: 80%;
   max-width: 90%;
+}
+
+.display-box {
+  border-radius: 8px;
+  border: solid 1px white;
 }
 </style>
