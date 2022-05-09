@@ -48,7 +48,7 @@
               v-model="lVolume"
               :min="0"
               :max="100"
-              thumb-size="20px"
+              thumb-size="22px"
               track-size="16px"
               color="grey-2"
             >
@@ -71,7 +71,7 @@
           variant="persistent"
         >
         </color-picker>
-        <div class="row q-pl-md q-mt-xl" style="width: 80%">
+        <div class="row q-pl-md q-mt-xl" style="width: 85%">
           <div class="row item-center q-gutter-y-sm text-grey-8">
             <div class="full-width row col-12 justify-center">
               <div class="col-4">开关状态:</div>
