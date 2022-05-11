@@ -121,7 +121,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted, reactive, onBeforeMount } from 'vue';
+import { defineComponent, ref, onMounted, reactive } from 'vue';
 import {
   BleClient,
   BleDevice,
@@ -133,15 +133,17 @@ import SrvsList from './BleSrvs.vue';
 import ColorPicker from '@radial-color-picker/vue-color-picker';
 // import { hslToRgb } from 'src/utils/util';
 import Convert from 'color-convert';
+import { arrayBufferToString } from 'src/utils/util';
 
 export default defineComponent({
   name: 'BleDev',
   components: { BleConn, SrvsList, ColorPicker },
   setup() {
+    // Ble transparent transfer
     const bleDev = {
       tc: {
         srvId: 'f000ffc0-0451-4000-b000-000000000000',
-        characteristicId: 'f000ffc1-0451-4000-b000-000000000000', // read, write and notify
+        characteristicId: 'f000ffc1-0451-4000-b000-000000000000', //  write and notify
       },
     };
     // const welcome = ref(true)
@@ -290,30 +292,32 @@ export default defineComponent({
         .catch((err) => {
           message: (err as Error).message;
         });
-
-      await BleClient.startNotifications(
-        currDev.value.deviceId,
-        bleDev.tc.srvId,
-        bleDev.tc.characteristicId,
-        (value) => {
-          $q.notify({
-            message: 'successed. ' + JSON.stringify(value),
-          });
-        }
-      )
-        .then((res) => {
-          const msg = JSON.stringify(res);
-          $q.notify({
-            message: 'return data: ' + msg,
-          });
-        })
-        .catch((err) => {
-          $q.notify({
-            message: JSON.stringify(err),
-          });
-          // console.log(err)
-        });
     };
+
+    type Res = {
+      value: string;
+    };
+    const startNotice = BleClient.startNotifications(
+      currDev.value.deviceId,
+      bleDev.tc.srvId,
+      bleDev.tc.characteristicId,
+      (res) => {
+        const ret = res as Res;
+        let devResult = '';
+        devResult = devResult + arrayBufferToString(ret.value);
+        $q.notify({
+          message: devResult,
+        });
+        // $q.notify({
+        //   message: 'successed. ' + JSON.stringify(value),
+        // });
+      }
+    ).catch((err) => {
+      $q.notify({
+        message: JSON.stringify(err),
+      });
+      // console.log(err)
+    });
 
     const conn = () => {
       showBleConn.value = true;
@@ -373,12 +377,12 @@ export default defineComponent({
     const powerSwitch = () => {
       powerStat.value = !powerStat.value;
       let buf, dataView;
-      let com1 = 79;
+      let com1 = 79; // O
       let com2: number;
       if (powerStat.value) {
-        com2 = 78;
+        com2 = 78; // N
       } else {
-        com2 = 70;
+        com2 = 70; // F
       }
       buf = new ArrayBuffer(4);
       dataView = new DataView(buf);
@@ -406,8 +410,13 @@ export default defineComponent({
       send(dataView);
     };
 
-    onBeforeMount(init);
-    onMounted(getConnDev);
+    // onBeforeMount(init);
+    // onMounted(getConnDev);
+    onMounted(function () {
+      init;
+      getConnDev;
+      startNotice;
+    });
 
     return {
       fmode, // flash mode

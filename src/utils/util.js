@@ -18,44 +18,38 @@ const formatNumber = (n) => {
   return n[1] ? n : '0' + n;
 };
 
-/**
- * HSL颜色值转换为RGB.
- * 换算公式改编自 http://en.wikipedia.org/wiki/HSL_color_space.
- * h, s, 和 l 设定在 [0, 1] 之间
- * 返回的 r, g, 和 b 在 [0, 255]之间
- *
- * @param   Number  h       色相
- * @param   Number  s       饱和度
- * @param   Number  l       亮度
- * @return  Array           RGB色值数值
- */
-function hslToRgb(hue, s = 80, l = 80) {
-  h = Math.round(hue / 100);
-  var r, g, b;
-
-  if (s == 0) {
-    r = g = b = l; // achromatic
-  } else {
-    var hue2rgb = function (p, q, t) {
-      if (t < 0) t += 1;
-      if (t > 1) t -= 1;
-      if (t < 1 / 6) return p + (q - p) * 6 * t;
-      if (t < 1 / 2) return q;
-      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-      return p;
-    };
-
-    var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-    var p = 2 * l - q;
-    r = hue2rgb(p, q, h + 1 / 3);
-    g = hue2rgb(p, q, h);
-    b = hue2rgb(p, q, h - 1 / 3);
+const arrayBufferToString = (arr) => {
+  if (typeof arr === 'string') {
+    return arr;
   }
+  const dataView = new DataView(arr);
+  const ints = new Uint8Array(arr.byteLength);
+  for (let i = 0; i < ints.length; i++) {
+    ints[i] = dataView.getUint8(i);
+  }
+  arr = ints;
+  var str = '',
+    _arr = arr;
 
-  return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
-}
+  for (let i = 0; i < _arr.length; i++) {
+    let one = _arr[i].toString(2),
+      v = one.match(/^1+?(?=0)/);
+    if (v && one.length === 8) {
+      let byteLength = v[0].length;
+      var store = _arr[i].toString(2).slice(7 - byteLength);
+      for (let st = 1; st < byteLength; st++) {
+        store += _arr[st + i].toString(2).slice(2);
+      }
+      str += String.fromCharCode(parseInt(store, 2));
+      i += byteLength - 1;
+    } else {
+      str += String.fromCharCode(_arr[i]);
+    }
+  }
+  return str;
+};
 
 module.exports = {
   formatTime: formatTime,
-  hslToRgb,
+  arrayBufferToString,
 };
