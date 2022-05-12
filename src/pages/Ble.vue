@@ -1,15 +1,23 @@
 <template>
   <q-page class="column items-center bg-grey-4">
     <div class="row input-inline q-justify-center q-gutter-sm q-my-sm q-pa-sm">
-      <q-btn color="primary" :disable="error !== ''" @click="conn">连接</q-btn>
+      <q-btn color="primary" :disable="error !== ''" @click.stop="conn"
+        >连接</q-btn
+      >
       <q-btn
         color="negative"
         :disable="connectedDev.length <= 0"
-        @click="disConn"
+        @click.stop="disConn"
         >断开</q-btn
       >
-      <q-btn color="info" :disable="currDev.deviceId === ''" @click="getSrvs"
+      <q-btn
+        color="info"
+        :disable="currDev.deviceId === ''"
+        @click.stop="getSrvs"
         >信息</q-btn
+      >
+      <q-btn color="info" :disable="currDev.deviceId === ''" @click.stop="test"
+        >test</q-btn
       >
     </div>
     <div
@@ -145,6 +153,10 @@ export default defineComponent({
         srvId: 'f000ffc0-0451-4000-b000-000000000000',
         characteristicId: 'f000ffc1-0451-4000-b000-000000000000', //  write and notify
       },
+      at: {
+        srvId: 'f000ffc0-0451-4000-b000-000000000000',
+        charId: 'f000ffc2-0451-4000-b000-000000000000',
+      },
     };
     // const welcome = ref(true)
     const $q = useQuasar();
@@ -228,6 +240,23 @@ export default defineComponent({
 
       send(dataView);
     };
+
+    const test = () => {
+      //
+      let buf = new ArrayBuffer(9);
+      let dataView = new DataView(buf);
+      dataView.setUint8(0, 64); // A
+      dataView.setUint8(1, 84); // T
+      dataView.setUint8(2, 43); // +
+      dataView.setUint8(3, 84); // T
+      dataView.setUint8(4, 69); // E
+      dataView.setUint8(5, 83); // S
+      dataView.setUint8(6, 84); // T
+      dataView.setUint8(7, 13);
+      dataView.setUint8(8, 10);
+
+      send(dataView);
+    };
     // 已经连接蓝牙设备服务
     // const bleSrvs = reactive(<BleService[]>[]);
     const bleSrvs = reactive(<BleService[]>[
@@ -294,30 +323,24 @@ export default defineComponent({
         });
     };
 
-    type Res = {
-      value: string;
+    const startNotice = (devId: string, srvId: string, charId: string) => {
+      BleClient.startNotifications(
+        // currDev.value.deviceId,
+        // bleDev.tc.srvId,
+        // bleDev.tc.characteristicId,
+        devId,
+        srvId,
+        charId,
+        (res) => {
+          // res: DataView
+          let devResult = '';
+          devResult = devResult + arrayBufferToString(res);
+          $q.notify({
+            message: devResult,
+          });
+        }
+      );
     };
-    const startNotice = BleClient.startNotifications(
-      currDev.value.deviceId,
-      bleDev.tc.srvId,
-      bleDev.tc.characteristicId,
-      (res) => {
-        const ret = res as Res;
-        let devResult = '';
-        devResult = devResult + arrayBufferToString(ret.value);
-        $q.notify({
-          message: devResult,
-        });
-        // $q.notify({
-        //   message: 'successed. ' + JSON.stringify(value),
-        // });
-      }
-    ).catch((err) => {
-      $q.notify({
-        message: JSON.stringify(err),
-      });
-      // console.log(err)
-    });
 
     const conn = () => {
       showBleConn.value = true;
@@ -338,6 +361,7 @@ export default defineComponent({
     // for bleConn components.
     const bleConnected = (ble: BleDevice) => {
       connectedDev.value.push(ble);
+      startNotice(ble.deviceId, bleDev.at.srvId, bleDev.at.charId);
       showBleConn.value = false;
       $q.notify({
         message: '蓝牙已连接',
@@ -415,7 +439,6 @@ export default defineComponent({
     onMounted(function () {
       init;
       getConnDev;
-      startNotice;
     });
 
     return {
@@ -442,6 +465,7 @@ export default defineComponent({
       onDialogHide,
       getConnDev,
       selDev,
+      test,
     };
   },
 });

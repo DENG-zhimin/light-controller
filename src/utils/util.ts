@@ -1,4 +1,9 @@
-const formatTime = (date) => {
+// const { Interface } = require("readline");
+// import { Interface } from 'readline'
+
+// import { def } from '@vue/shared';
+
+export const formatTime = (date) => {
   const year = date.getFullYear();
   const month = date.getMonth() + 1;
   const day = date.getDate();
@@ -18,7 +23,7 @@ const formatNumber = (n) => {
   return n[1] ? n : '0' + n;
 };
 
-const arrayBufferToString = (arr) => {
+export const arrayBufferToString = (arr: DataView) => {
   if (typeof arr === 'string') {
     return arr;
   }
@@ -28,15 +33,15 @@ const arrayBufferToString = (arr) => {
     ints[i] = dataView.getUint8(i);
   }
   arr = ints;
-  var str = '',
-    _arr = arr;
+  let str = '';
+  const _arr = arr;
 
   for (let i = 0; i < _arr.length; i++) {
-    let one = _arr[i].toString(2),
+    const one = _arr[i].toString(2),
       v = one.match(/^1+?(?=0)/);
     if (v && one.length === 8) {
-      let byteLength = v[0].length;
-      var store = _arr[i].toString(2).slice(7 - byteLength);
+      const byteLength = v[0].length;
+      let store = _arr[i].toString(2).slice(7 - byteLength);
       for (let st = 1; st < byteLength; st++) {
         store += _arr[st + i].toString(2).slice(2);
       }
@@ -49,7 +54,9 @@ const arrayBufferToString = (arr) => {
   return str;
 };
 
-module.exports = {
-  formatTime: formatTime,
-  arrayBufferToString,
-};
+// module.exports = {
+//   formatTime: formatTime,
+//   arrayBufferToString,
+//   NotifyRes,
+// };
+// export default { formatTime, arrayBufferToString, NotifyRes };
