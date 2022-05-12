@@ -255,7 +255,7 @@ export default defineComponent({
       dataView.setUint8(7, 13);
       dataView.setUint8(8, 10);
 
-      send(dataView, bleDev.at.charId);
+      send(dataView);
     };
     // 已经连接蓝牙设备服务
     // const bleSrvs = reactive(<BleService[]>[]);
@@ -364,7 +364,7 @@ export default defineComponent({
     // for bleConn components.
     const bleConnected = (ble: BleDevice) => {
       connectedDev.value.push(ble);
-      startNotice(ble.deviceId, bleDev.at.srvId, bleDev.at.charId);
+      startNotice(ble.deviceId, bleDev.tc.srvId, bleDev.tc.characteristicId);
       showBleConn.value = false;
       $q.notify({
         message: '蓝牙已连接',
@@ -440,8 +440,8 @@ export default defineComponent({
     // onBeforeMount(init);
     // onMounted(getConnDev);
     onMounted(function () {
-      init;
-      getConnDev;
+      init();
+      getConnDev();
     });
 
     return {
