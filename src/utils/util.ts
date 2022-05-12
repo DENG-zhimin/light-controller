@@ -1,9 +1,11 @@
+// eslint-disable-file
 // const { Interface } = require("readline");
 // import { Interface } from 'readline'
 
 // import { def } from '@vue/shared';
 
-export const formatTime = (date) => {
+// eslint-disable-next-line
+export const formatTime = (date: Date) => {
   const year = date.getFullYear();
   const month = date.getMonth() + 1;
   const day = date.getDate();
@@ -18,15 +20,17 @@ export const formatTime = (date) => {
   );
 };
 
-const formatNumber = (n) => {
+const formatNumber = (n: number | string) => {
   n = n.toString();
   return n[1] ? n : '0' + n;
 };
 
-export const arrayBufferToString = (arr: DataView) => {
+// eslint-disable-next-line
+/* export const arrayBufferToString = (arr) => {
   if (typeof arr === 'string') {
     return arr;
   }
+  // arr is DataView
   const dataView = new DataView(arr);
   const ints = new Uint8Array(arr.byteLength);
   for (let i = 0; i < ints.length; i++) {
@@ -52,7 +56,7 @@ export const arrayBufferToString = (arr: DataView) => {
     }
   }
   return str;
-};
+}; */
 
 // module.exports = {
 //   formatTime: formatTime,

@@ -141,7 +141,7 @@ import SrvsList from './BleSrvs.vue';
 import ColorPicker from '@radial-color-picker/vue-color-picker';
 // import { hslToRgb } from 'src/utils/util';
 import Convert from 'color-convert';
-import { arrayBufferToString } from 'src/utils/util';
+// import { arrayBufferToString } from 'src/utils/util';
 
 export default defineComponent({
   name: 'BleDev',
@@ -255,7 +255,7 @@ export default defineComponent({
       dataView.setUint8(7, 13);
       dataView.setUint8(8, 10);
 
-      send(dataView);
+      send(dataView, bleDev.at.charId);
     };
     // 已经连接蓝牙设备服务
     // const bleSrvs = reactive(<BleService[]>[]);
@@ -295,7 +295,10 @@ export default defineComponent({
       );
     };
 
-    const send = async (dataView: DataView) => {
+    const send = async (
+      dataView: DataView,
+      charId: string = bleDev.tc.characteristicId
+    ) => {
       // query printer Status
       // let buf;
       // let dataView;
@@ -310,7 +313,7 @@ export default defineComponent({
       await BleClient.write(
         currDev.value.deviceId,
         bleDev.tc.srvId,
-        bleDev.tc.characteristicId,
+        charId,
         dataView
       )
         .then((/* res */) => {
@@ -333,10 +336,10 @@ export default defineComponent({
         charId,
         (res) => {
           // res: DataView
-          let devResult = '';
-          devResult = devResult + arrayBufferToString(res);
+          // let devResult = '';
+          // devResult = devResult + arrayBufferToString(res);
           $q.notify({
-            message: devResult,
+            message: JSON.stringify(res),
           });
         }
       );
