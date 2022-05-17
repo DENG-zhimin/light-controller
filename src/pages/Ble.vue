@@ -150,8 +150,10 @@ export default defineComponent({
     // Ble transparent transfer
     const bleDev = {
       tc: {
-        srvId: 'f000ffc0-0451-4000-b000-000000000000',
-        characteristicId: 'f000ffc1-0451-4000-b000-000000000000', //  write and notify
+        srvId: 'FDEE',
+        characteristicId: 'FDA1', //  write and notify
+        // srvId: 'f000ffc0-0451-4000-b000-000000000000',
+        // characteristicId: 'f000ffc1-0451-4000-b000-000000000000', //  write and notify
       },
       at: {
         srvId: 'f000ffc0-0451-4000-b000-000000000000',
