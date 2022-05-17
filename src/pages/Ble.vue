@@ -41,7 +41,7 @@
       <div v-else class="q-my-sm">未连接设备</div>
       <!-- control panel -->
       <div class="column items-center q-mt-md">
-        <div class="row justify-center q-mb-md">
+        <!-- <div class="row justify-center q-mb-md">
           <q-btn
             round
             :icon="powerStat ? 'las la-sun ' : 'las la-power-off'"
@@ -49,7 +49,7 @@
             :text-color="powerStat ? 'grey-6' : 'grey-2'"
             @click.stop="powerSwitch"
           />
-        </div>
+        </div> -->
         <div class="row full-width justify-center q-mb-md">
           <div class="col-7">
             <q-slider
@@ -141,7 +141,7 @@ import SrvsList from './BleSrvs.vue';
 import ColorPicker from '@radial-color-picker/vue-color-picker';
 // import { hslToRgb } from 'src/utils/util';
 import Convert from 'color-convert';
-// import { arrayBufferToString } from 'src/utils/util';
+// import encoder from 'src/utils/encoding';
 
 export default defineComponent({
   name: 'BleDev',
@@ -150,8 +150,8 @@ export default defineComponent({
     // Ble transparent transfer
     const bleDev = {
       tc: {
-        srvId: 'FDEE',
-        characteristicId: 'FDA1', //  write and notify
+        srvId: '0000fdee-0000-1000-8000-00805f9b34fb',
+        characteristicId: '0000fda1-0000-1000-8000-00805f9b34fb', //  write and notify
         // srvId: 'f000ffc0-0451-4000-b000-000000000000',
         // characteristicId: 'f000ffc1-0451-4000-b000-000000000000', //  write and notify
       },
@@ -175,8 +175,8 @@ export default defineComponent({
     const ble_enabled = ref(false);
     // const see_all = ref(false)
     const error = ref('');
-    const eq = 61; // equal
-    const comma = 44;
+    // const eq = 61; // equal
+    // const comma = 44;
 
     const powerStat = ref(false);
 
@@ -184,14 +184,17 @@ export default defineComponent({
     const lVolume = ref(50);
 
     // 手电工作模式
-    const fmode = ref(1);
+    const fmode = ref('M');
 
     // device mode
     const fmodeOpt = ref([
-      { label: 'L', value: 1 },
-      { label: 'F1', value: 2 },
-      { label: 'F2', value: 3 },
-      { label: 'sos', value: 4 },
+      { label: 'H', value: 'H' },
+      { label: 'M', value: 'M' },
+      { label: 'L', value: 'L' },
+      { label: 'C', value: 'C' },
+      { label: 'F1', value: 'f1' },
+      { label: 'F2', value: 'f2' },
+      { label: 'SOS', value: 'sos' },
     ]);
 
     // light color
@@ -205,42 +208,44 @@ export default defineComponent({
     // default rgb color
     const rgb = ref(Convert.hsl.rgb(50, 100, 50));
 
+    const commandCode = {
+      C: 1, // color
+      W: 4, // white
+      f1: 5, // flash 1
+      f2: 6, // flash 2
+      sos: 7, // sos mode
+      set: 8, // settings
+    };
+
+    console.log(commandCode);
+
+    const encode = (comm: string, param1 = 0, param2 = 0, param3 = 0) => {
+      const header = 170;
+      const commVal = eval('commandCode.' + comm) as number;
+      const cs = header + commVal + param1 + param2 + param3;
+      let buf = new ArrayBuffer(7);
+      let dataView = new DataView(buf);
+      dataView.setUint8(0, header);
+      dataView.setUint8(1, commVal);
+      dataView.setUint8(2, param1);
+      dataView.setUint8(3, param2);
+      dataView.setUint8(4, param3);
+      dataView.setUint16(5, cs);
+      return dataView;
+    };
+
     const onColorSelect = (hue: number) => {
       color.hue = hue;
       rgb.value = Convert.hsl.rgb([hue, 100, 50]);
-
-      let buf = new ArrayBuffer(10);
-      let dataView = new DataView(buf);
-      let com1 = 67; // C
-      let com2 = 79; // O
-      dataView.setUint8(0, com1);
-      dataView.setUint8(1, com2);
-      dataView.setUint8(2, eq);
-      dataView.setUint8(3, rgb.value[0]);
-      dataView.setUint8(4, comma);
-      dataView.setUint8(5, rgb.value[1]);
-      dataView.setUint8(6, comma);
-      dataView.setUint8(7, rgb.value[2]);
-      dataView.setUint8(8, 13);
-      dataView.setUint8(9, 10);
-
-      send(dataView);
+      const command = encode('C', rgb.value[0], rgb.value[1], rgb.value[2]);
+      send(command);
     };
 
+    // on light volume change
     const onLChange = () => {
       //
-      let buf = new ArrayBuffer(6);
-      let dataView = new DataView(buf);
-      let com1 = 76; // L
-      let com2 = 76; // L
-      dataView.setUint8(0, com1);
-      dataView.setUint8(1, com2);
-      dataView.setUint8(2, eq);
-      dataView.setUint8(3, lVolume.value);
-      dataView.setUint8(4, 13);
-      dataView.setUint8(5, 10);
-
-      send(dataView);
+      const command = encode('W', lVolume.value);
+      send(command);
     };
 
     const test = () => {
@@ -301,17 +306,7 @@ export default defineComponent({
       dataView: DataView,
       charId: string = bleDev.tc.characteristicId
     ) => {
-      // query printer Status
-      // let buf;
-      // let dataView;
-      /* buf = new ArrayBuffer(5);
-      dataView = new DataView(buf);
-      dataView.setUint8(0, 27);
-      dataView.setUint8(1, 33);
-      dataView.setUint8(2, 251);
-      dataView.setUint8(3, 13);
-      dataView.setUint8(4, 10); */
-      // write(deviceId: string, service: string, characteristic: string, value: DataView, options?: TimeoutOptions | undefined) => Promise<void>
+      console.log(dataView);
       await BleClient.write(
         currDev.value.deviceId,
         bleDev.tc.srvId,
@@ -329,22 +324,14 @@ export default defineComponent({
     };
 
     const startNotice = (devId: string, srvId: string, charId: string) => {
-      BleClient.startNotifications(
-        // currDev.value.deviceId,
-        // bleDev.tc.srvId,
-        // bleDev.tc.characteristicId,
-        devId,
-        srvId,
-        charId,
-        (res) => {
-          // res: DataView
-          // let devResult = '';
-          // devResult = devResult + arrayBufferToString(res);
-          $q.notify({
-            message: JSON.stringify(res),
-          });
-        }
-      );
+      BleClient.startNotifications(devId, srvId, charId, (res) => {
+        // res: DataView
+        // let devResult = '';
+        // devResult = devResult + arrayBufferToString(res);
+        $q.notify({
+          message: JSON.stringify(res),
+        });
+      });
     };
 
     const conn = () => {
@@ -403,40 +390,35 @@ export default defineComponent({
       currDev.value.deviceId = ble.deviceId;
     };
 
-    const powerSwitch = () => {
-      powerStat.value = !powerStat.value;
-      let buf, dataView;
-      let com1 = 79; // O
-      let com2: number;
-      if (powerStat.value) {
-        com2 = 78; // N
-      } else {
-        com2 = 70; // F
-      }
-      buf = new ArrayBuffer(4);
-      dataView = new DataView(buf);
-      dataView.setUint8(0, com1);
-      dataView.setUint8(1, com2);
-      dataView.setUint8(2, 13);
-      dataView.setUint8(3, 10);
-
-      send(dataView);
-    };
+    /*  const powerSwitch = () => {
+      const command = encode('p');
+      send(command);
+    }; */
 
     // set flashligt mode
     const setMode = () => {
-      let buf = new ArrayBuffer(6);
-      let dataView = new DataView(buf);
-      let com1 = 77;
-      let com2 = 79;
-      dataView.setUint8(0, com1);
-      dataView.setUint8(1, com2);
-      dataView.setUint8(2, eq);
-      dataView.setUint8(3, fmode.value);
-      dataView.setUint8(4, 13);
-      dataView.setUint8(5, 10);
-
-      send(dataView);
+      let param1 = 0,
+        param2 = 0,
+        param3 = 0;
+      let comm = fmode.value;
+      switch (fmode.value) {
+        case 'H':
+          comm = 'W';
+          param1 = 255;
+          break;
+        case 'M':
+          comm = 'W';
+          param1 = 128;
+          break;
+        case 'L':
+          comm = 'W';
+          param1 = 50;
+          break;
+        default:
+          break;
+      }
+      const command = encode(comm, param1, param2, param3);
+      send(command);
     };
 
     // onBeforeMount(init);
@@ -459,7 +441,7 @@ export default defineComponent({
       rgb,
       lVolume, // light volume, luminosity
       powerStat, // power status
-      powerSwitch,
+      // powerSwitch,
       setMode,
       onColorSelect,
       onLChange,
