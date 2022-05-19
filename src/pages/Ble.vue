@@ -65,15 +65,15 @@
           />
         </div> -->
         <div class="row full-width justify-center q-mb-md">
-          <div class="col-7">
+          <div class="col-11">
             <q-slider
               v-model="lVolume"
               :min="0"
-              :max="100"
+              :max="255"
               thumb-size="22px"
               track-size="16px"
               color="grey-2"
-              @change="onLChange"
+              @update:model-value="onLChange"
             >
             </q-slider>
           </div>
@@ -169,10 +169,6 @@ export default defineComponent({
         // srvId: 'f000ffc0-0451-4000-b000-000000000000',
         // characteristicId: 'f000ffc1-0451-4000-b000-000000000000', //  write and notify
       },
-      at: {
-        srvId: 'f000ffc0-0451-4000-b000-000000000000',
-        charId: 'f000ffc2-0451-4000-b000-000000000000',
-      },
     };
     // const welcome = ref(true)
     const $q = useQuasar();
@@ -180,8 +176,8 @@ export default defineComponent({
     const connectedDev = ref<BleDevice[]>([]);
     // current dev
     const currDev = ref(<BleDevice>{
-      name: 'AAA',
-      deviceId: 'BBB',
+      name: '',
+      deviceId: '',
     });
     const showBleConn = ref(false);
     // show srvs dialog
@@ -195,7 +191,7 @@ export default defineComponent({
     const powerStat = ref(false);
 
     // light volume
-    const lVolume = ref(50);
+    const lVolume = ref(127);
 
     // 手电工作模式
     const fmode = ref('M');
@@ -206,9 +202,9 @@ export default defineComponent({
       { label: 'M', value: 'M' },
       { label: 'L', value: 'L' },
       { label: 'C', value: 'C' },
-      { label: 'F1', value: 'f1' },
-      { label: 'F2', value: 'f2' },
-      { label: 'SOS', value: 'sos' },
+      { label: 'F1', value: 'F1' },
+      { label: 'F2', value: 'F2' },
+      { label: 'SOS', value: 'SOS' },
     ]);
 
     // light color
@@ -225,10 +221,10 @@ export default defineComponent({
     const commandCode = {
       C: 1, // color
       W: 4, // white
-      f1: 5, // flash 1
-      f2: 6, // flash 2
-      sos: 7, // sos mode
-      set: 8, // settings
+      F1: 5, // flash 1
+      F2: 6, // flash 2
+      SOS: 7, // sos mode
+      SET: 8, // settings
     };
 
     // action flag
@@ -253,24 +249,17 @@ export default defineComponent({
 
     // triggle at color ring change
     const onColorSelect = (hue: number) => {
-      // console.log('select');
-      // send color by slow frequency. sleep 100ms after every send.
-      slow(sendColor(hue));
-    };
-
-    // true send action
-    const sendColor = (hue: number) => {
       color.hue = hue; // for number to display on page.
       rgb.value = Convert.hsl.rgb([hue, 100, 50]); // convert color from hsl to rgb
       const command = encode('C', rgb.value[0], rgb.value[1], rgb.value[2]); // encode command to DataView
-      send(command); // send
+      slowSend(command); // send
     };
 
     // on light volume change
-    const onLChange = () => {
-      //
-      const command = encode('W', lVolume.value);
-      send(command);
+    const onLChange = (val: number | null) => {
+      if (val === null) return false;
+      const command = encode('W', val);
+      slowSend(command);
     };
 
     const test = () => {
@@ -327,11 +316,31 @@ export default defineComponent({
       );
     };
 
+    const slowSend = async (dataView: DataView) => {
+      if (act.value === true) {
+        act.value = false; // close send window
+        // open send window after 100ms
+        setTimeout(() => {
+          act.value = true;
+        }, 100);
+        // return if no currdev
+        if (!currDev.value.deviceId) return false;
+        await BleClient.write(
+          currDev.value.deviceId,
+          bleDev.tc.srvId,
+          bleDev.tc.characteristicId,
+          dataView
+        );
+      }
+    };
+
     const send = async (
       dataView: DataView,
       charId: string = bleDev.tc.characteristicId
     ) => {
-      // console.log(dataView);
+      console.log('sended');
+      // return if no currdev
+      if (!currDev.value.deviceId) return false;
       await BleClient.write(
         currDev.value.deviceId,
         bleDev.tc.srvId,
@@ -452,16 +461,16 @@ export default defineComponent({
     };
 
     // make method act slowly. disable 100ms after every action.
-    const slow = (fn: void) => {
-      if (act.value === true) {
-        fn;
-        // console.log('slow');
-        act.value = false;
-        setTimeout(() => {
-          act.value = true;
-        }, 100);
-      }
-    };
+    // const slow = async (action: void) => {
+    //   if (act.value === true) {
+    //     action
+    //     console.log('slow');
+    //     act.value = false;
+    //     setTimeout(() => {
+    //       act.value = true;
+    //     }, 500);
+    //   }
+    // };
 
     const goSettings = () => {
       alert(1);
