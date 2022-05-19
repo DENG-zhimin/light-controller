@@ -1,6 +1,9 @@
 <template>
   <q-page class="column items-center bg-grey-4">
-    <div class="row input-inline q-justify-center q-gutter-sm q-my-sm q-pa-sm">
+    <div
+      v-show="false"
+      class="row input-inline q-justify-center q-gutter-sm q-my-sm q-pa-sm"
+    >
       <q-btn color="primary" :disable="error !== ''" @click.stop="conn"
         >连接</q-btn
       >
@@ -21,8 +24,20 @@
       >
     </div>
     <div
-      class="col column q-gutter-y-sm shadow-1 q-ma-xs items-center full-width"
+      class="col column q-gutter-y-sm shadow-1 q-mt-sm q-px-sm items-center full-width"
     >
+      <q-item v-if="currDev.name" class="shadow-1 full-width">
+        <q-item-section class="">
+          {{ currDev.name + ': ' + currDev.deviceId }}
+        </q-item-section>
+        <!-- <q-space></q-space> -->
+        <q-item-section class="col-2">
+          <div class="row justify-center">
+            <q-btn flat round icon="las la-cog" @click.stop="goSettings" />
+          </div>
+        </q-item-section>
+      </q-item>
+      <div v-else class="q-my-sm">未连接设备</div>
       <div class="q-my-md q-gutter-y-sm" v-if="connectedDev.length > 0">
         已连接设备：
         <q-card v-for="(ble, index) in connectedDev" :key="index">
@@ -38,7 +53,6 @@
           </q-card-section>
         </q-card>
       </div>
-      <div v-else class="q-my-sm">未连接设备</div>
       <!-- control panel -->
       <div class="column items-center q-mt-md">
         <!-- <div class="row justify-center q-mb-md">
@@ -166,8 +180,8 @@ export default defineComponent({
     const connectedDev = ref<BleDevice[]>([]);
     // current dev
     const currDev = ref(<BleDevice>{
-      name: '',
-      deviceId: '',
+      name: 'AAA',
+      deviceId: 'BBB',
     });
     const showBleConn = ref(false);
     // show srvs dialog
@@ -449,6 +463,10 @@ export default defineComponent({
       }
     };
 
+    const goSettings = () => {
+      alert(1);
+    };
+
     // onBeforeMount(init);
     // onMounted(getConnDev);
     onMounted(function () {
@@ -481,6 +499,7 @@ export default defineComponent({
       getConnDev,
       selDev,
       test,
+      goSettings,
     };
   },
 });

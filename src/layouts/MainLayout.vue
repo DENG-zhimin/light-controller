@@ -1,14 +1,19 @@
 <template>
   <q-layout view="lHh Lpr lFf">
     <q-header elevated>
-      <q-toolbar>
+      <q-toolbar class="bg-grey-7">
         <!-- <q-toolbar-title></q-toolbar-title> -->
+        <!-- <q-avatar square> -->
+        <img src="~assets/logo.png" alt="AOI" style="width: 80px" />
+        <!-- </q-avatar> -->
         <q-space></q-space>
-        <div class="row justify-center text-bold">
+        <div class="row justify-center text-bold q-mr-lg">
           Flashlight Controller
         </div>
-          <q-space></q-space>
-        <div>AOI Ltd.</div>
+        <q-space></q-space>
+        <div>
+          <q-avatar />
+        </div>
       </q-toolbar>
     </q-header>
 
