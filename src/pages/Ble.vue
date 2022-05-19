@@ -206,7 +206,7 @@ export default defineComponent({
     });
 
     // default rgb color
-    const rgb = ref(Convert.hsl.rgb(50, 100, 50));
+    const rgb = ref(<number[]>Convert.hsl.rgb(50, 100, 50));
 
     const commandCode = {
       C: 1, // color
@@ -217,28 +217,39 @@ export default defineComponent({
       set: 8, // settings
     };
 
+    // action flag
+    const act = ref(true);
+
     console.log(commandCode);
 
     const encode = (comm: string, param1 = 0, param2 = 0, param3 = 0) => {
       const header = 170;
       const commVal = eval('commandCode.' + comm) as number;
       const cs = header + commVal + param1 + param2 + param3;
-      let buf = new ArrayBuffer(7);
+      let buf = new ArrayBuffer(6);
       let dataView = new DataView(buf);
       dataView.setUint8(0, header);
       dataView.setUint8(1, commVal);
       dataView.setUint8(2, param1);
       dataView.setUint8(3, param2);
       dataView.setUint8(4, param3);
-      dataView.setUint16(5, cs);
+      dataView.setUint8(5, cs);
       return dataView;
     };
 
+    // triggle at color ring change
     const onColorSelect = (hue: number) => {
-      color.hue = hue;
-      rgb.value = Convert.hsl.rgb([hue, 100, 50]);
-      const command = encode('C', rgb.value[0], rgb.value[1], rgb.value[2]);
-      send(command);
+      // console.log('select');
+      // send color by slow frequency. sleep 100ms after every send.
+      slow(sendColor(hue));
+    };
+
+    // true send action
+    const sendColor = (hue: number) => {
+      color.hue = hue; // for number to display on page.
+      rgb.value = Convert.hsl.rgb([hue, 100, 50]); // convert color from hsl to rgb
+      const command = encode('C', rgb.value[0], rgb.value[1], rgb.value[2]); // encode command to DataView
+      send(command); // send
     };
 
     // on light volume change
@@ -306,7 +317,7 @@ export default defineComponent({
       dataView: DataView,
       charId: string = bleDev.tc.characteristicId
     ) => {
-      console.log(dataView);
+      // console.log(dataView);
       await BleClient.write(
         currDev.value.deviceId,
         bleDev.tc.srvId,
@@ -414,11 +425,28 @@ export default defineComponent({
           comm = 'W';
           param1 = 50;
           break;
+        case 'C':
+          param1 = rgb.value[0];
+          param2 = rgb.value[1];
+          param3 = rgb.value[2];
+          break;
         default:
           break;
       }
       const command = encode(comm, param1, param2, param3);
       send(command);
+    };
+
+    // make method act slowly. disable 100ms after every action.
+    const slow = (fn: void) => {
+      if (act.value === true) {
+        fn;
+        // console.log('slow');
+        act.value = false;
+        setTimeout(() => {
+          act.value = true;
+        }, 100);
+      }
     };
 
     // onBeforeMount(init);
