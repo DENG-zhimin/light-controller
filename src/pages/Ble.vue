@@ -210,9 +210,6 @@ export default defineComponent({
     // light color
     const color = reactive({
       hue: 50,
-      // sacturation: 100,
-      // luminosity: 50,
-      // alpha: 1,
     });
 
     // default rgb color
