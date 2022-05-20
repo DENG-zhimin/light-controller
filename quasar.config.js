@@ -86,7 +86,18 @@ module.exports = configure(function (ctx) {
 
     // https://v2.quasar.dev/quasar-cli-webpack/quasar-config-js#Property%3A-framework
     framework: {
-      config: {},
+      config: {
+        capacitor: {
+          // Quasar handles app exit on mobile phone back button.
+          // backButtonExit: true / false / '*' / ['/login', '/home', '/my-page'],
+          backButtonExit: true,
+
+          // On the other hand, the following completely
+          // disables Quasar's back button management.
+          // backButton: true
+        },
+        notify: {},
+      },
 
       // iconSet: 'material-icons', // Quasar icon set
       // lang: 'en-US', // Quasar language pack
@@ -99,7 +110,7 @@ module.exports = configure(function (ctx) {
       // directives: [],
 
       // Quasar plugins
-      plugins: [],
+      plugins: ['Notify'],
     },
 
     // animations: 'all', // --- includes all animations

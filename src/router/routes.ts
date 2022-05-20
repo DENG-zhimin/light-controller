@@ -7,6 +7,7 @@ const routes: RouteRecordRaw[] = [
     children: [
       // { path: '', component: () => import('pages/Ble.vue') },
       { path: '', component: () => import('pages/Index.vue') },
+      { path: 'bledev', component: () => import('pages/BleDev.vue') },
       // {
       //   path: 'ble',
       //   name: 'ble',

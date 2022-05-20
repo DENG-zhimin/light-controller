@@ -9,8 +9,7 @@
       </q-tab-panel>
 
       <q-tab-panel name="settings">
-        <div class="text-h6">Settings</div>
-        Settings
+        <settings-page />
       </q-tab-panel>
     </q-tab-panels>
 
@@ -34,11 +33,13 @@
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
 import PanelPage from './Panel.vue';
+import SettingsPage from './Settings.vue';
 
 export default defineComponent({
   name: 'IndexPage',
   components: {
     PanelPage,
+    SettingsPage,
   },
   setup() {
     const tab = ref('panel');

@@ -1,38 +1,13 @@
 <template>
   <div class="column items-center bg-grey-4 full-height">
-    <div
-      v-show="false"
-      class="row input-inline q-justify-center q-gutter-sm q-my-sm q-pa-sm"
-    >
-      <q-btn color="primary" :disable="error !== ''" @click.stop="conn"
-        >连接</q-btn
-      >
-      <q-btn
-        color="negative"
-        :disable="connectedDev.length <= 0"
-        @click.stop="disConn"
-        >断开</q-btn
-      >
-      <q-btn
-        color="info"
-        :disable="currDev.deviceId === ''"
-        @click.stop="getSrvs"
-        >信息</q-btn
-      >
-      <q-btn color="info" :disable="currDev.deviceId === ''" @click.stop="test"
-        >test</q-btn
-      >
-    </div>
     <div class="col column q-pt-md q-px-sm items-center full-width full-height">
-      <q-list v-if="currDev.name" bordered separator class="full-width">
+      <q-list v-if="currDev.deviceId" bordered separator class="full-width">
         <q-item>
-          <q-item-section class="cursor-pointer" @click.stop="goDev">
+          <q-item-section
+            class="cursor-pointer text-center"
+            @click.stop="getDev"
+          >
             {{ currDev.name + ': ' + currDev.deviceId }}
-          </q-item-section>
-          <q-item-section class="col-2">
-            <div class="row justify-center">
-              <q-btn flat round icon="las la-cog" @click.stop="goSettings" />
-            </div>
           </q-item-section>
         </q-item>
       </q-list>
@@ -40,7 +15,7 @@
         <q-item>
           <q-item-section
             class="cursor-pointer text-center"
-            @click.stop="goDev"
+            @click.stop="getDev"
           >
             无连接设备
           </q-item-section>
@@ -131,68 +106,32 @@
         </div>
       </div>
     </div>
-    <q-dialog v-model="showSrvs" ref="srvsListDialog ">
-      <div class="dialog-frame bg-white">
-        <q-bar>
-          <q-space />
-          <q-btn dense flat icon="close" v-close-popup />
-        </q-bar>
-        <srvs-list :bleSrvs="bleSrvs" />
-      </div>
-    </q-dialog>
-    <q-dialog v-model="showBleConn" ref="bleConnDialog" @hide="onDialogHide">
-      <div class="dialog-frame bg-white">
-        <q-bar>
-          <q-space />
-          <q-btn dense flat icon="close" v-close-popup />
-        </q-bar>
-        <ble-conn @bleConnected="bleConnected" @bleDisConnected="disConn">
-        </ble-conn>
-      </div>
-    </q-dialog>
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent, ref, onMounted, reactive } from 'vue';
-import {
-  BleClient,
-  BleDevice,
-  BleService,
-} from '@capacitor-community/bluetooth-le';
-import { useQuasar } from 'quasar';
-import BleConn from './BleConn.vue';
-import SrvsList from './BleSrvs.vue';
+import { BleClient, BleService } from '@capacitor-community/bluetooth-le';
 import ColorPicker from '@radial-color-picker/vue-color-picker';
 // import { hslToRgb } from 'src/utils/util';
 import Convert from 'color-convert';
 // import encoder from 'src/utils/encoding';
+import { useRouter } from 'vue-router';
+import { useBleStore } from 'src/stores/ble';
+import { storeToRefs } from 'pinia';
+import { bleDev, encode } from 'src/utils/util';
 
 export default defineComponent({
   name: 'PanelPage',
-  components: { BleConn, SrvsList, ColorPicker },
+  components: { ColorPicker },
   setup() {
+    const router = useRouter();
+    const bleStore = useBleStore();
     // Ble transparent transfer
-    const bleDev = {
-      tc: {
-        srvId: '0000fdee-0000-1000-8000-00805f9b34fb',
-        characteristicId: '0000fda1-0000-1000-8000-00805f9b34fb', //  write and notify
-        // srvId: 'f000ffc0-0451-4000-b000-000000000000',
-        // characteristicId: 'f000ffc1-0451-4000-b000-000000000000', //  write and notify
-      },
-    };
-    // const welcome = ref(true)
-    const $q = useQuasar();
-    // conncted dev array
-    const connectedDev = ref<BleDevice[]>([]);
+
     // current dev
-    const currDev = ref(<BleDevice>{
-      name: '',
-      deviceId: '',
-    });
-    const showBleConn = ref(false);
-    // show srvs dialog
-    const showSrvs = ref(false);
+    let { currDev } = storeToRefs(bleStore);
+
     const ble_enabled = ref(false);
     // const see_all = ref(false)
     const error = ref('');
@@ -240,21 +179,6 @@ export default defineComponent({
 
     console.log(commandCode);
 
-    const encode = (comm: string, param1 = 0, param2 = 0, param3 = 0) => {
-      const header = 170;
-      const commVal = eval('commandCode.' + comm) as number;
-      const cs = header + commVal + param1 + param2 + param3;
-      let buf = new ArrayBuffer(6);
-      let dataView = new DataView(buf);
-      dataView.setUint8(0, header);
-      dataView.setUint8(1, commVal);
-      dataView.setUint8(2, param1);
-      dataView.setUint8(3, param2);
-      dataView.setUint8(4, param3);
-      dataView.setUint8(5, cs);
-      return dataView;
-    };
-
     // triggle at color ring change
     const onColorSelect = (hue: number) => {
       color.hue = hue; // for number to display on page.
@@ -270,22 +194,6 @@ export default defineComponent({
       slowSend(command);
     };
 
-    const test = () => {
-      //
-      let buf = new ArrayBuffer(9);
-      let dataView = new DataView(buf);
-      dataView.setUint8(0, 64); // A
-      dataView.setUint8(1, 84); // T
-      dataView.setUint8(2, 43); // +
-      dataView.setUint8(3, 84); // T
-      dataView.setUint8(4, 69); // E
-      dataView.setUint8(5, 83); // S
-      dataView.setUint8(6, 84); // T
-      dataView.setUint8(7, 13);
-      dataView.setUint8(8, 10);
-
-      send(dataView);
-    };
     // 已经连接蓝牙设备服务
     // const bleSrvs = reactive(<BleService[]>[]);
     const bleSrvs = reactive(<BleService[]>[
@@ -309,20 +217,6 @@ export default defineComponent({
         ],
       },
     ]);
-
-    const getSrvs = async () => {
-      bleSrvs.length = 0; // 清除原有信息。
-      showSrvs.value = true; // 打开信息页面
-      await BleClient.getServices(currDev.value.deviceId).then(
-        (res: BleService[]) => {
-          if (res.length > 0) {
-            res.forEach((srv) => {
-              bleSrvs.push(srv);
-            });
-          }
-        }
-      );
-    };
 
     const slowSend = async (dataView: DataView) => {
       if (act.value === true) {
@@ -365,42 +259,16 @@ export default defineComponent({
         });
     };
 
-    const startNotice = (devId: string, srvId: string, charId: string) => {
-      BleClient.startNotifications(devId, srvId, charId, (res) => {
-        // res: DataView
-        // let devResult = '';
-        // devResult = devResult + arrayBufferToString(res);
-        $q.notify({
-          message: JSON.stringify(res),
-        });
-      });
-    };
-
-    const conn = () => {
-      showBleConn.value = true;
-    };
-
-    const disConn = () => {
-      // 断开所有连接设备
-      connectedDev.value.forEach((v) => {
-        BleClient.disconnect(v.deviceId);
-      });
-      // 清空已连接设备数据
-      connectedDev.value.length = 0;
-      // 清空当前设备
-      currDev.value.name = '';
-      currDev.value.deviceId = '';
-    };
-
-    // for bleConn components.
-    const bleConnected = (ble: BleDevice) => {
-      connectedDev.value.push(ble);
-      startNotice(ble.deviceId, bleDev.tc.srvId, bleDev.tc.characteristicId);
-      showBleConn.value = false;
-      $q.notify({
-        message: '蓝牙已连接',
-      });
-    };
+    // const startNotice = (devId: string, srvId: string, charId: string) => {
+    //   BleClient.startNotifications(devId, srvId, charId, (res) => {
+    //     // res: DataView
+    //     // let devResult = '';
+    //     // devResult = devResult + arrayBufferToString(res);
+    //     $q.notify({
+    //       message: JSON.stringify(res),
+    //     });
+    //   });
+    // };
 
     const init = async () => {
       try {
@@ -414,26 +282,8 @@ export default defineComponent({
       }
     };
 
-    const onDialogHide = () => {
-      console.log('dialog hide.');
-    };
-
-    const getConnDev = () => {
-      connectedDev.value.length = 0;
-      BleClient.getConnectedDevices([]).then((res) => {
-        res.forEach((v) => {
-          connectedDev.value.push(v);
-        });
-      });
-    };
-
-    const selDev = (ble: BleDevice) => {
-      currDev.value.name = ble.name;
-      currDev.value.deviceId = ble.deviceId;
-    };
-
-    const goDev = () => {
-      console.log('go');
+    const getDev = () => {
+      router.push('/bledev');
     };
 
     /*  const powerSwitch = () => {
@@ -472,36 +322,16 @@ export default defineComponent({
       send(command);
     };
 
-    // make method act slowly. disable 100ms after every action.
-    // const slow = async (action: void) => {
-    //   if (act.value === true) {
-    //     action
-    //     console.log('slow');
-    //     act.value = false;
-    //     setTimeout(() => {
-    //       act.value = true;
-    //     }, 500);
-    //   }
-    // };
-
-    const goSettings = () => {
-      alert(1);
-    };
-
     // onBeforeMount(init);
     // onMounted(getConnDev);
     onMounted(function () {
       init();
-      getConnDev();
     });
 
     return {
       fmode, // flash mode
       fmodeOpt,
-      connectedDev, // [f]
       bleSrvs,
-      showBleConn,
-      showSrvs,
       currDev,
       error,
       color,
@@ -512,16 +342,7 @@ export default defineComponent({
       setMode,
       onColorSelect,
       onLChange,
-      conn,
-      disConn,
-      bleConnected,
-      getSrvs,
-      onDialogHide,
-      getConnDev,
-      selDev,
-      test,
-      goSettings,
-      goDev,
+      getDev,
     };
   },
 });

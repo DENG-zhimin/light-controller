@@ -3,9 +3,9 @@
     <q-header elevated>
       <q-toolbar class="bg-grey-7">
         <!-- <q-toolbar-title></q-toolbar-title> -->
-        <!-- <q-avatar square> -->
-        <img src="~assets/logo.png" alt="AOI" style="width: 80px" />
-        <!-- </q-avatar> -->
+        <div @click.stop="goHome">
+          <img src="~assets/logo.png" alt="AOI" style="width: 80px" />
+        </div>
         <q-space></q-space>
         <div class="row justify-center text-bold q-mr-lg">
           Flashlight Controller
@@ -45,6 +45,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
+import { useRouter } from 'vue-router';
 
 export default defineComponent({
   name: 'MainLayout',
@@ -52,7 +53,11 @@ export default defineComponent({
   components: {},
 
   setup() {
-    return {};
+    const router = useRouter();
+    const goHome = () => {
+      router.push('/');
+    };
+    return { goHome };
   },
 });
 </script>
