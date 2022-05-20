@@ -1,10 +1,11 @@
 <template>
-  <q-page class="q-pa-none bg-green">
+  <q-page class="row q-pa-none">
     <!-- <q-card> -->
-    <q-tab-panels v-model="tab" animated class="full-height bg-red">
-      <q-tab-panel name="remote" class="">
-        <div class="text-h6">Remote</div>
-        Remote
+    <q-tab-panels v-model="tab" class="col-12">
+      <q-tab-panel name="panel" class="q-pa-none">
+        <!-- <div class="text-h6">Panel</div>
+        Panel -->
+        <panel-page />
       </q-tab-panel>
 
       <q-tab-panel name="settings">
@@ -13,28 +14,34 @@
       </q-tab-panel>
     </q-tab-panels>
 
-    <q-separator />
+    <!-- <q-separator /> -->
 
     <q-tabs
       v-model="tab"
       dense
-      class="bg-grey-3 fixed-bottom"
       align="justify"
-      narrow-indicator
+      indicator-color="transparent"
+      active-class="bg-grey-5 "
+      class="bg-grey-2 fixed-bottom text-grey-8"
     >
-      <q-tab name="remote" label="Remote" />
-      <q-tab name="settings" label="Settings" />
+      <!-- narrow-indicator -->
+      <q-tab name="panel" icon="las la-sun" label="panel" />
+      <q-tab name="settings" icon="las la-cog" label="Settings" />
     </q-tabs>
     <!-- </q-card> -->
   </q-page>
 </template>
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
+import PanelPage from './Panel.vue';
 
 export default defineComponent({
   name: 'IndexPage',
+  components: {
+    PanelPage,
+  },
   setup() {
-    const tab = ref('remote');
+    const tab = ref('panel');
     return {
       tab,
     };

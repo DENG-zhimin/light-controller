@@ -1,5 +1,5 @@
 <template>
-  <q-page class="column items-center bg-grey-4">
+  <div class="column items-center bg-grey-4 full-height">
     <div
       v-show="false"
       class="row input-inline q-justify-center q-gutter-sm q-my-sm q-pa-sm"
@@ -23,22 +23,31 @@
         >test</q-btn
       >
     </div>
-    <div
-      class="col column q-gutter-y-sm shadow-1 q-mt-sm q-px-sm items-center full-width"
-    >
-      <q-item v-if="currDev.name" class="shadow-1 full-width">
-        <q-item-section class="">
-          {{ currDev.name + ': ' + currDev.deviceId }}
-        </q-item-section>
-        <!-- <q-space></q-space> -->
-        <q-item-section class="col-2">
-          <div class="row justify-center">
-            <q-btn flat round icon="las la-cog" @click.stop="goSettings" />
-          </div>
-        </q-item-section>
-      </q-item>
-      <div v-else class="q-my-sm">未连接设备</div>
-      <div class="q-my-md q-gutter-y-sm" v-if="connectedDev.length > 0">
+    <div class="col column q-pt-md q-px-sm items-center full-width full-height">
+      <q-list v-if="currDev.name" bordered separator class="full-width">
+        <q-item>
+          <q-item-section class="cursor-pointer" @click.stop="goDev">
+            {{ currDev.name + ': ' + currDev.deviceId }}
+          </q-item-section>
+          <q-item-section class="col-2">
+            <div class="row justify-center">
+              <q-btn flat round icon="las la-cog" @click.stop="goSettings" />
+            </div>
+          </q-item-section>
+        </q-item>
+      </q-list>
+      <q-list v-else bordered separator class="full-width">
+        <q-item>
+          <q-item-section
+            class="cursor-pointer text-center"
+            @click.stop="goDev"
+          >
+            无连接设备
+          </q-item-section>
+        </q-item>
+      </q-list>
+
+      <!-- <div class="q-my-md q-gutter-y-sm" v-if="connectedDev.length > 0">
         已连接设备：
         <q-card v-for="(ble, index) in connectedDev" :key="index">
           <q-card-section
@@ -52,9 +61,10 @@
             {{ ble.name + ' -- ' + ble.deviceId }}
           </q-card-section>
         </q-card>
-      </div>
+      </div> -->
       <!-- control panel -->
-      <div class="column items-center q-mt-md">
+      <div class="col column q-gutter-y-lg q-mb-lg items-center q-mt-md">
+        <!-- power switch -->
         <!-- <div class="row justify-center q-mb-md">
           <q-btn
             round
@@ -98,6 +108,7 @@
         <div
           class="row q-pl-md q-mt-md q-mb-sm inset-shadow-down shadow-2 bg-grey-5 text-grey-7 q-py-sm display-box"
           style="width: 70%"
+          v-if="false"
         >
           <div class="row item-center q-gutter-y-sm">
             <div class="full-width row col-12 justify-center">
@@ -139,7 +150,7 @@
         </ble-conn>
       </div>
     </q-dialog>
-  </q-page>
+  </div>
 </template>
 
 <script lang="ts">
@@ -158,7 +169,7 @@ import Convert from 'color-convert';
 // import encoder from 'src/utils/encoding';
 
 export default defineComponent({
-  name: 'BleDev',
+  name: 'PanelPage',
   components: { BleConn, SrvsList, ColorPicker },
   setup() {
     // Ble transparent transfer
@@ -421,6 +432,10 @@ export default defineComponent({
       currDev.value.deviceId = ble.deviceId;
     };
 
+    const goDev = () => {
+      console.log('go');
+    };
+
     /*  const powerSwitch = () => {
       const command = encode('p');
       send(command);
@@ -506,6 +521,7 @@ export default defineComponent({
       selDev,
       test,
       goSettings,
+      goDev,
     };
   },
 });
