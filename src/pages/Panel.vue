@@ -1,5 +1,5 @@
 <template>
-  <div class="column items-center bg-grey-4 full-height">
+  <div class="column items-center bg-grey-4 full-height q-pb-xl">
     <div class="col column q-pt-md q-px-sm items-center full-width full-height">
       <q-list v-if="currDev.deviceId" bordered separator class="full-width">
         <q-item>
@@ -59,6 +59,7 @@
               track-size="16px"
               color="grey-2"
               @update:model-value="onLChange"
+              @change="onLFinChange"
             >
             </q-slider>
           </div>
@@ -80,16 +81,17 @@
           variant="persistent"
         >
         </color-picker>
+        <!-- params display window -->
         <div
           class="row q-pl-md q-mt-md q-mb-sm inset-shadow-down shadow-2 bg-grey-5 text-grey-7 q-py-sm display-box"
           style="width: 70%"
           v-if="false"
         >
           <div class="row item-center q-gutter-y-sm">
-            <div class="full-width row col-12 justify-center">
+            <!-- <div class="full-width row col-12 justify-center">
               <div class="col-4 text-right">开关状态：</div>
               <div class="col-7 q-pl-md">{{ powerStat ? 'ON' : 'OFF' }}</div>
-            </div>
+            </div> -->
             <div class="full-width row col-12 justify-center">
               <div class="col-4 text-right">亮度：</div>
               <div class="col-7 q-pl-md">{{ lVolume }}</div>
@@ -98,8 +100,12 @@
               <div class="col-4 text-right">模式：</div>
               <div class="col-7 q-pl-md">{{ fmode }}</div>
             </div>
+            <!--             <div class="full-width row col-12 justify-center">
+              <div class="col-4 text-right">RGB 1：</div>
+              <div class="col-7 q-pl-md">{{ origColor }}</div>
+            </div> -->
             <div class="full-width row col-12 justify-center">
-              <div class="col-4 text-right">RGB 色彩：</div>
+              <div class="col-4 text-right">RGB：</div>
               <div class="col-7 q-pl-md">{{ rgb }}</div>
             </div>
           </div>
@@ -120,9 +126,7 @@ import {
 } from 'vue';
 import { BleClient, BleService } from '@capacitor-community/bluetooth-le';
 import ColorPicker from '@radial-color-picker/vue-color-picker';
-// import { hslToRgb } from 'src/utils/util';
 import Convert from 'color-convert';
-// import encoder from 'src/utils/encoding';
 import { useRouter } from 'vue-router';
 import { useBleStore } from 'src/stores/ble';
 import { storeToRefs } from 'pinia';
@@ -145,7 +149,7 @@ export default defineComponent({
     // const eq = 61; // equal
     // const comma = 44;
 
-    const powerStat = ref(false);
+    // const powerStat = ref(false);
 
     // light volume
     const lVolume = ref(255);
@@ -203,12 +207,69 @@ export default defineComponent({
     // action flag
     const act = ref(true);
 
+    const origColor = ref(<number[]>[]);
+
     // triggle at color ring change
     const onColorSelect = (hue: number) => {
       color.hue = hue; // for number to display on page.
-      rgb.value = Convert.hsl.rgb([hue, 100, 50]); // convert color from hsl to rgb
+      // let origCol = new Array(3)
+      origColor.value = Convert.hsl.rgb([hue, 100, 50]); // convert color from hsl to rgb
+      rgb.value = reblend(origColor.value);
+
       const command = encode('C', rgb.value[0], rgb.value[1], rgb.value[2]); // encode command to DataView
       slowSend(command); // send
+    };
+
+    const reblend = (data: number[]) => {
+      const R = data[0];
+      const G = data[1];
+      const B = data[2];
+
+      const sum = R + G + B;
+      if (sum === 255) {
+        return data;
+      }
+
+      if (sum === 510) {
+        return [Math.floor(R / 2), Math.floor(G / 2), Math.floor(B / 2)];
+      }
+
+      if (R === 255) {
+        if (G > 0) {
+          // B ===0
+          const bld = reCalc(R, G);
+          return [bld[0], bld[1], B];
+        } else {
+          // G === 0
+          const bld = reCalc(R, B);
+          return [bld[0], G, bld[1]];
+        }
+      } else if (G === 255) {
+        if (R > 0) {
+          // B=== 0
+          const bld = reCalc(G, R);
+          return [bld[1], bld[0], B];
+        } else {
+          // R === 0
+          const bld = reCalc(G, B);
+          return [R, bld[0], bld[1]];
+        }
+      } else {
+        // B === 255
+        if (R > 0) {
+          const bld = reCalc(B, R);
+          return [bld[1], G, bld[0]];
+        } else {
+          // R===0
+          const bld = reCalc(B, G);
+          return [R, bld[1], bld[0]];
+        }
+      }
+    };
+
+    const reCalc = (FF: number, Small: number) => {
+      const MinusNumber = Math.ceil(Small / 2);
+      return [FF - MinusNumber, Small - MinusNumber];
     };
 
     // on light volume change
@@ -216,6 +277,13 @@ export default defineComponent({
       if (val === null) return false;
       const command = encode('W', val);
       slowSend(command);
+    };
+
+    // on light volume final change
+    const onLFinChange = (val: number | null) => {
+      if (val === null) return false;
+      const command = encode('W', val);
+      send(command);
     };
 
     // 已经连接蓝牙设备服务
@@ -353,6 +421,7 @@ export default defineComponent({
     });
 
     return {
+      origColor,
       fmode, // flash mode
       fmodeOpt,
       bleSrvs,
@@ -361,11 +430,12 @@ export default defineComponent({
       color,
       rgb,
       lVolume, // light volume, luminosity
-      powerStat, // power status
+      // powerStat, // power status
       // powerSwitch,
       setMode,
       onColorSelect,
       onLChange,
+      onLFinChange,
       getDev,
     };
   },
