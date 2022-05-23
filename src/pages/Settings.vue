@@ -1,5 +1,5 @@
 <template>
-  <div class="column">
+  <div class="column bg-grey-4 q-pa-md full-width full-height">
     <!-- button functions -->
     <div class="column">
       Button Functions:
@@ -12,7 +12,8 @@
             <div class="text-center">
               <q-btn-toggle
                 v-model="m.status"
-                toggle-color="primary"
+                toggle-text-color="grey-2"
+                toggle-color="grey-6"
                 :options="[
                   { label: 'ON', value: true },
                   { label: 'OFF', value: false },
@@ -23,65 +24,27 @@
           </q-item-section>
         </q-item>
 
-        <q-item v-show="true">
+        <!-- <q-item >
           <q-item-section class="col-5 q-my-xs q-mx-auto">
-            <q-btn label="confirm" @click="confirm" />
+            <q-btn color="grey-6" label="confirm" @click="confirm" />
           </q-item-section>
-        </q-item>
+        </q-item> -->
       </q-list>
     </div>
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref } from 'vue';
+import { defineComponent } from 'vue';
 // import { bleDev } from 'src/utils/util';
+import { storeToRefs } from 'pinia';
+import { useBleStore } from 'src/stores/ble';
 
 export default defineComponent({
   name: 'SettingsPage',
   setup() {
     //
-    interface BtnMode {
-      mode: string;
-      index: number;
-      status: boolean;
-    }
-    const btnMode = ref(<BtnMode[]>[
-      {
-        mode: 'H',
-        index: 6,
-        status: true,
-      },
-      {
-        mode: 'M',
-        index: 5,
-        status: true,
-      },
-      {
-        mode: 'L',
-        index: 4,
-        status: true,
-      },
-      {
-        mode: 'C',
-        index: 3,
-        status: true,
-      },
-      {
-        mode: 'F1',
-        index: 2,
-        status: true,
-      },
-      {
-        mode: 'F2',
-        index: 1,
-        status: true,
-      },
-      {
-        mode: 'SOS',
-        index: 0,
-        status: true,
-      },
-    ]);
+    const bleStore = useBleStore();
+    const { btnMode } = storeToRefs(bleStore);
 
     // const setFunc = (m: BtnMode) => {
     //   const val = 2 ** m.index;
@@ -96,6 +59,10 @@ export default defineComponent({
         }
       });
       console.log(ret);
+
+      const b = 32;
+      const res = ret & b;
+      console.log(res);
     };
 
     return {

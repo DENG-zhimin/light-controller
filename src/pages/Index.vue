@@ -8,7 +8,7 @@
         <panel-page />
       </q-tab-panel>
 
-      <q-tab-panel name="settings">
+      <q-tab-panel name="settings" class="q-pa-none">
         <settings-page />
       </q-tab-panel>
     </q-tab-panels>

@@ -4,6 +4,12 @@ import {
   // BleService,
 } from '@capacitor-community/bluetooth-le';
 
+interface BtnMode {
+  mode: string;
+  index: number;
+  status: boolean;
+}
+
 export const useBleStore = defineStore('ble', {
   state: () => ({
     currDev: <BleDevice>{
@@ -11,6 +17,43 @@ export const useBleStore = defineStore('ble', {
       deviceId: '',
     },
     connectedDevs: <BleDevice[]>[],
+    btnMode: <BtnMode[]>[
+      {
+        mode: 'H',
+        index: 6,
+        status: true,
+      },
+      {
+        mode: 'M',
+        index: 5,
+        status: true,
+      },
+      {
+        mode: 'L',
+        index: 4,
+        status: true,
+      },
+      {
+        mode: 'C',
+        index: 3,
+        status: true,
+      },
+      {
+        mode: 'F1',
+        index: 2,
+        status: true,
+      },
+      {
+        mode: 'F2',
+        index: 1,
+        status: true,
+      },
+      {
+        mode: 'SOS',
+        index: 0,
+        status: true,
+      },
+    ],
   }),
   getters: {
     // doubleCount: (state) => state.counter * 2,

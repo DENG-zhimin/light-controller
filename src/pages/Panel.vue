@@ -110,7 +110,14 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted, reactive } from 'vue';
+import {
+  defineComponent,
+  ref,
+  onMounted,
+  reactive,
+  computed,
+  watch,
+} from 'vue';
 import { BleClient, BleService } from '@capacitor-community/bluetooth-le';
 import ColorPicker from '@radial-color-picker/vue-color-picker';
 // import { hslToRgb } from 'src/utils/util';
@@ -130,7 +137,7 @@ export default defineComponent({
     // Ble transparent transfer
 
     // current dev
-    let { currDev } = storeToRefs(bleStore);
+    let { currDev, btnMode } = storeToRefs(bleStore);
 
     const ble_enabled = ref(false);
     // const see_all = ref(false)
@@ -141,21 +148,49 @@ export default defineComponent({
     const powerStat = ref(false);
 
     // light volume
-    const lVolume = ref(127);
+    const lVolume = ref(255);
+
+    interface FModeOpt {
+      label: string;
+      value: string;
+    }
+
+    const fmodeOpt = computed(() => {
+      let ret = <FModeOpt[]>[];
+      btnMode.value.forEach((mod) => {
+        if (mod.status) {
+          const newMod = {
+            label: mod.mode,
+            value: mod.mode,
+          };
+          ret.push(newMod);
+        }
+      });
+      return ret;
+    });
 
     // 手电工作模式
-    const fmode = ref('M');
+    // const fmode = ref('M');
+    const defMode = fmodeOpt.value[0].value; // default mode
+    const fmode = ref(defMode);
 
-    // device mode
-    const fmodeOpt = ref([
-      { label: 'H', value: 'H' },
-      { label: 'M', value: 'M' },
-      { label: 'L', value: 'L' },
-      { label: 'C', value: 'C' },
-      { label: 'F1', value: 'F1' },
-      { label: 'F2', value: 'F2' },
-      { label: 'SOS', value: 'SOS' },
-    ]);
+    // watch the mode value to adjust the light volume.
+    watch(fmode, (newVal) => {
+      switch (newVal) {
+        case 'H':
+          lVolume.value = 255;
+          break;
+        case 'M':
+          lVolume.value = 127;
+          break;
+        case 'L':
+          lVolume.value = 64;
+          break;
+        default:
+          // lVolume.value = 127;
+          break;
+      }
+    });
 
     // light color
     const color = reactive({
