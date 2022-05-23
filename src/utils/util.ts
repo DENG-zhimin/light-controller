@@ -34,6 +34,16 @@ export const bleDev = {
   },
 };
 
+const commandCode = {
+  C: 1, // color
+  W: 4, // white
+  F1: 5, // flash 1
+  F2: 6, // flash 2
+  SOS: 7, // sos mode
+  SET: 8, // settings
+};
+console.log(commandCode);
+
 export const encode = (comm: string, param1 = 0, param2 = 0, param3 = 0) => {
   const header = 170;
   const commVal = eval('commandCode.' + comm) as number;

@@ -200,19 +200,8 @@ export default defineComponent({
     // default rgb color
     const rgb = ref(<number[]>Convert.hsl.rgb(50, 100, 50));
 
-    const commandCode = {
-      C: 1, // color
-      W: 4, // white
-      F1: 5, // flash 1
-      F2: 6, // flash 2
-      SOS: 7, // sos mode
-      SET: 8, // settings
-    };
-
     // action flag
     const act = ref(true);
-
-    console.log(commandCode);
 
     // triggle at color ring change
     const onColorSelect = (hue: number) => {

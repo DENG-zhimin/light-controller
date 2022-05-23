@@ -3,8 +3,5 @@
 	"appName": "Flashlight Controller",
 	"bundledWebRuntime": false,
 	"npmClient": "npm",
-	"webDir": "www",
-	"server": {
-		"url": "http://192.168.10.58:8080"
-	}
+	"webDir": "www"
 }
