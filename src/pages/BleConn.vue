@@ -1,11 +1,11 @@
 <template>
-  <div class=" q-pa-xs bg-white">
-
-    <div class="row q-mt-sm ">
+  <div class="q-pa-xs bg-white">
+    <div class="row q-mt-sm">
       <div
-        v-if="results.length>0"
-        class="col-12 row  ble-list q-gutter-y-sm q-pa-sm ">
-        <div class="col-12 " v-for="(ble, indexb) in results" :key="indexb">
+        v-if="results.length > 0"
+        class="col-12 row ble-list q-gutter-y-sm q-pa-sm"
+      >
+        <div class="col-12" v-for="(ble, indexb) in results" :key="indexb">
           <q-card>
             <q-card-section
               class="text-grey-8 bg-white"
@@ -18,9 +18,7 @@
           </q-card>
         </div>
       </div>
-      <div v-else>
-        搜索中...
-      </div>
+      <div v-else>搜索中...</div>
       <div class="col-12 row justify-center" v-if="error">
         {{ error }}
       </div>
@@ -32,12 +30,14 @@
 import { defineComponent, ref, onMounted } from 'vue';
 import { BleClient, BleDevice } from '@capacitor-community/bluetooth-le';
 import { useQuasar } from 'quasar';
+import { useBleStore } from 'src/stores/ble';
 
 export default defineComponent({
   name: 'BleConn',
-  emits: ['bleConnected', 'bleDisConnected'],
+  emits: ['bleConnected'],
   setup(props, ctx) {
     const $q = useQuasar();
+    const bleStore = useBleStore();
     const results = ref<BleDevice[]>([]);
     const scanning = ref(false);
     // const tried_scanning = ref(false);
@@ -53,7 +53,7 @@ export default defineComponent({
           if (rssi > -90) {
             results.value.push(res.device);
           }
-          scanning.value = false
+          scanning.value = false;
         });
         setTimeout(() => {
           void BleClient.stopLEScan().then(() => {
@@ -62,15 +62,15 @@ export default defineComponent({
         }, 10000);
       } catch (err) {
         error.value = (err as Error).message;
-        scanning.value=false
+        scanning.value = false;
       }
     };
 
     const connBle = async (ble: BleDevice) => {
       await BleClient.connect(ble.deviceId, () => {
         // ondisconnected
-        $q.notify({ message: '蓝牙连接已断开' });
-        ctx.emit('bleDisConnected');
+        bleStore.rmCntedBle(ble);
+        $q.notify({ message: ble.deviceId + ' 蓝牙连接已断开' });
       })
         .then(() => {
           ctx.emit('bleConnected', ble);
@@ -95,7 +95,6 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-
 .ble-list {
   overflow-x: hidden;
   overflow-y: auto;

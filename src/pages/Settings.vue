@@ -3,7 +3,7 @@
     <!-- button functions -->
     <div class="column">
       Button Functions:
-      <q-list bordered>
+      <q-list bordered separator>
         <q-item v-for="(m, index) in btnMode" :key="index">
           <q-item-section class="col-4 text-center">
             {{ m.mode }}
@@ -13,56 +13,72 @@
               <q-btn-toggle
                 v-model="m.status"
                 toggle-text-color="grey-2"
-                toggle-color="grey-6"
+                toggle-color="grey-7"
                 :options="[
                   { label: 'ON', value: true },
                   { label: 'OFF', value: false },
                 ]"
               />
-              <!-- @update:model-value="setFunc(m)" -->
+              <!-- @update:model-value ="setFunc(m)" -->
             </div>
           </q-item-section>
         </q-item>
-
-        <!-- <q-item >
+      </q-list>
+      <q-list>
+        <q-item>
           <q-item-section class="col-5 q-my-xs q-mx-auto">
-            <q-btn color="grey-6" label="confirm" @click="confirm" />
+            <q-btn color="grey-7" label="confirm" @click="confirm" />
           </q-item-section>
-        </q-item> -->
+        </q-item>
       </q-list>
     </div>
   </div>
 </template>
 <script lang="ts">
-import { defineComponent } from 'vue';
-// import { bleDev } from 'src/utils/util';
-import { storeToRefs } from 'pinia';
-import { useBleStore } from 'src/stores/ble';
+import { defineComponent, ref } from 'vue';
+import { useBleStore, BtnMode } from 'src/stores/ble';
+import { encode, bleDev } from 'src/utils/util';
+import { BleClient } from '@capacitor-community/bluetooth-le';
 
 export default defineComponent({
   name: 'SettingsPage',
   setup() {
     //
     const bleStore = useBleStore();
-    const { btnMode } = storeToRefs(bleStore);
+    // const { btnMode } = storeToRefs(bleStore);
+
+    // get btnMode from store unreactive
+    const btnMode = ref(
+      JSON.parse(JSON.stringify(bleStore.btnMode)) as BtnMode[]
+    );
 
     // const setFunc = (m: BtnMode) => {
     //   const val = 2 ** m.index;
     //   console.log(val)
     // };
 
-    const confirm = () => {
-      let ret = 0;
-      btnMode.value.forEach((mode) => {
-        if (mode.status) {
-          ret += 2 ** mode.index;
+    const confirm = async () => {
+      let mode = 0; // mode number
+      // calc mode number
+      btnMode.value.forEach((m: BtnMode) => {
+        if (m.status) {
+          mode += 2 ** m.index;
         }
       });
-      console.log(ret);
 
-      const b = 32;
-      const res = ret & b;
-      console.log(res);
+      bleStore.setBtnMode(mode); // change btnMode in Store
+
+      // send mode number to ble
+      if (!bleStore.currDev.deviceId) return null; // return if without currDev
+      const command = encode('MODE', mode);
+      BleClient.write(
+        bleStore.currDev.deviceId,
+        bleDev.tc.srvId,
+        bleDev.tc.characteristicId,
+        command
+      ).catch((err) => {
+        console.log(err);
+      });
     };
 
     return {

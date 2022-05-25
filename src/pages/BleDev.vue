@@ -100,8 +100,7 @@
           <q-space />
           <q-btn dense flat icon="close" v-close-popup />
         </q-bar>
-        <ble-conn @bleConnected="bleConnected" @bleDisConnected="disConnBle">
-        </ble-conn>
+        <ble-conn @bleConnected="bleConnected"> </ble-conn>
       </div>
     </q-dialog>
   </q-page>
@@ -286,12 +285,6 @@ export default defineComponent({
       bleStore.rmCnted();
     };
 
-    const disConnBle = (ble: BleDevice) => {
-      // 断开所有连接设备
-      BleClient.disconnect(ble.deviceId);
-      // 清空已连接设备数据
-      bleStore.rmCntedBle(ble);
-    };
     // for bleConn components.
     // const bleConnected = (ble: BleDevice) => {
     //   connectedDevs.value.push(ble);
@@ -332,9 +325,6 @@ export default defineComponent({
     };
 
     const setCurr = (ble: BleDevice) => {
-      $q.notify({
-        message: ble.name,
-      });
       bleStore.setCurr(ble);
     };
 
@@ -359,14 +349,12 @@ export default defineComponent({
       fmodeOpt,
       connectedDevs, // [f]
       bleSrvs,
-
       showBleConn,
       showSrvs,
       currDev,
       error,
       conn,
       disConnAll,
-      disConnBle,
       bleConnected,
       getSrvs,
       onDialogHide,

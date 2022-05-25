@@ -311,6 +311,7 @@ export default defineComponent({
     ]);
 
     const slowSend = async (dataView: DataView) => {
+      if (!currDev.value.deviceId) return null;
       if (act.value === true) {
         act.value = false; // close send window
         // open send window after 100ms
@@ -332,9 +333,9 @@ export default defineComponent({
       dataView: DataView,
       charId: string = bleDev.tc.characteristicId
     ) => {
-      console.log('sended');
       // return if no currdev
-      if (!currDev.value.deviceId) return false;
+      if (!currDev.value.deviceId) return null;
+      // console.log('sended');
       await BleClient.write(
         currDev.value.deviceId,
         bleDev.tc.srvId,

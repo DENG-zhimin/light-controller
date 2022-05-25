@@ -4,7 +4,7 @@ import {
   // BleService,
 } from '@capacitor-community/bluetooth-le';
 
-interface BtnMode {
+export interface BtnMode {
   mode: string;
   index: number;
   status: boolean;
@@ -81,7 +81,7 @@ export const useBleStore = defineStore('ble', {
       // empty cntedDevs array
       this.connectedDevs.forEach((e, index) => {
         if (e.deviceId === ble.deviceId) {
-          this.connectedDevs.slice(index, 1);
+          this.connectedDevs.splice(index, 1);
         }
       });
       // clean currDev
@@ -89,6 +89,15 @@ export const useBleStore = defineStore('ble', {
         this.currDev.name = '';
         this.currDev.deviceId = '';
       }
+    },
+    setBtnMode(data: number) {
+      this.btnMode.forEach((mode, index) => {
+        if (data & (2 ** mode.index)) {
+          this.btnMode[index].status = true;
+        } else {
+          this.btnMode[index].status = false;
+        }
+      });
     },
   },
 });

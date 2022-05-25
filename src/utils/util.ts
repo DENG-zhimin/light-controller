@@ -41,9 +41,18 @@ const commandCode = {
   F2: 6, // flash 2
   SOS: 7, // sos mode
   SET: 8, // settings
+  MODE: 9,
 };
 console.log(commandCode);
 
+/*
+  encode command and params to dataview
+  @param comm string
+  @param param1 number
+  @param param2 number
+  @param param3 number
+  return  DataView
+ */
 export const encode = (comm: string, param1 = 0, param2 = 0, param3 = 0) => {
   const header = 170;
   const commVal = eval('commandCode.' + comm) as number;
