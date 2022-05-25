@@ -174,7 +174,10 @@ export default defineComponent({
 
     // 手电工作模式
     // const fmode = ref('M');
-    const defMode = fmodeOpt.value[0].value; // default mode
+    let defMode = '';
+    if (fmodeOpt.value.length > 0) {
+      defMode = fmodeOpt.value[0].value; // default mode
+    }
     const fmode = ref(defMode);
 
     // watch the mode value to adjust the light volume.

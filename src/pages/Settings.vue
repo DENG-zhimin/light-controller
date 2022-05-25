@@ -3,14 +3,14 @@
     <!-- button functions -->
     <div class="column">
       <div class="text-bold q-mb-sm">Button Functions:</div>
-      <q-list bordered separator>
+      <q-list bordered>
         <q-item v-for="(m, index) in btnMode" :key="index">
           <q-item-section class="col-4 text-center">
             {{ m.mode }}
           </q-item-section>
           <q-item-section class="col">
             <div class="text-center">
-              <q-btn-toggle
+              <!-- <q-btn-toggle
                 v-model="m.status"
                 toggle-text-color="grey-2"
                 toggle-color="grey-7"
@@ -18,8 +18,8 @@
                   { label: 'ON', value: true },
                   { label: 'OFF', value: false },
                 ]"
-              />
-              <!-- @update:model-value ="setFunc(m)" -->
+              /> -->
+              <q-toggle keep-color color="blue-4" v-model="m.status" />
             </div>
           </q-item-section>
         </q-item>
