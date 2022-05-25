@@ -19,9 +19,9 @@
         @click.stop="getSrvs"
         >信息</q-btn
       >
-      <q-btn color="info" :disable="currDev.deviceId === ''" @click.stop="test"
+      <!--       <q-btn color="info" :disable="currDev.deviceId === ''" @click.stop="test"
         >test</q-btn
-      >
+      > -->
     </div>
     <div class="col column q-pt-md q-px-sm items-center full-width full-height">
       <q-list v-if="currDev.deviceId" bordered separator class="full-width">
@@ -119,7 +119,7 @@ import SrvsList from './BleSrvs.vue';
 // import encoder from 'src/utils/encoding';
 import { useBleStore } from 'src/stores/ble';
 import { storeToRefs } from 'pinia';
-import { bleDev } from 'src/utils/util';
+// import { bleDev } from 'src/utils/util';
 
 export default defineComponent({
   name: 'BleDev',
@@ -158,33 +158,7 @@ export default defineComponent({
       { label: 'SOS', value: 'SOS' },
     ]);
 
-    const commandCode = {
-      C: 1, // color
-      W: 4, // white
-      F1: 5, // flash 1
-      F2: 6, // flash 2
-      SOS: 7, // sos mode
-      SET: 8, // settings
-    };
-
-    console.log(commandCode);
-    /*
-    const encode = (comm: string, param1 = 0, param2 = 0, param3 = 0) => {
-      const header = 170;
-      const commVal = eval('commandCode.' + comm) as number;
-      const cs = header + commVal + param1 + param2 + param3;
-      let buf = new ArrayBuffer(6);
-      let dataView = new DataView(buf);
-      dataView.setUint8(0, header);
-      dataView.setUint8(1, commVal);
-      dataView.setUint8(2, param1);
-      dataView.setUint8(3, param2);
-      dataView.setUint8(4, param3);
-      dataView.setUint8(5, cs);
-      return dataView;
-    }; */
-
-    const test = () => {
+    /*     const test = () => {
       //
       let buf = new ArrayBuffer(9);
       let dataView = new DataView(buf);
@@ -199,7 +173,7 @@ export default defineComponent({
       dataView.setUint8(8, 10);
 
       send(dataView);
-    };
+    }; */
     // 已经连接蓝牙设备服务
     // const bleSrvs = reactive(<BleService[]>[]);
     const bleSrvs = reactive(<BleService[]>[
@@ -238,7 +212,7 @@ export default defineComponent({
       );
     };
 
-    const send = async (
+    /*     const send = async (
       dataView: DataView,
       charId: string = bleDev.tc.characteristicId
     ) => {
@@ -251,7 +225,7 @@ export default defineComponent({
         charId,
         dataView
       )
-        .then((/* res */) => {
+        .then(() => {
           // $q.notify({
           //   message: JSON.stringify(res),
           // });
@@ -259,7 +233,7 @@ export default defineComponent({
         .catch((err) => {
           message: (err as Error).message;
         });
-    };
+    }; */
 
     const startNotice = (devId: string, srvId: string, charId: string) => {
       BleClient.startNotifications(devId, srvId, charId, (res) => {
@@ -361,7 +335,6 @@ export default defineComponent({
       getConnDev,
       setCurr,
       getInfo,
-      test,
       startNotice,
     };
   },

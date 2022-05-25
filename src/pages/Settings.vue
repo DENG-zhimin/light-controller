@@ -2,7 +2,7 @@
   <div class="column bg-grey-4 q-pa-md full-width full-height">
     <!-- button functions -->
     <div class="column">
-      Button Functions:
+      <div class="text-bold q-mb-sm">Button Functions:</div>
       <q-list bordered separator>
         <q-item v-for="(m, index) in btnMode" :key="index">
           <q-item-section class="col-4 text-center">

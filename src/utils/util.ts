@@ -40,8 +40,7 @@ const commandCode = {
   F1: 5, // flash 1
   F2: 6, // flash 2
   SOS: 7, // sos mode
-  SET: 8, // settings
-  MODE: 9,
+  MODE: 8, // button function settings
 };
 console.log(commandCode);
 
