@@ -59,7 +59,6 @@
               track-size="16px"
               color="grey-2"
               @update:model-value="onLChange"
-              @change="onLFinChange"
             >
             </q-slider>
           </div>
@@ -276,14 +275,11 @@ export default defineComponent({
     const onLChange = (val: number | null) => {
       if (val === null) return false;
       const command = encode('W', val);
-      slowSend(command);
-    };
-
-    // on light volume final change
-    const onLFinChange = (val: number | null) => {
-      if (val === null) return false;
-      const command = encode('W', val);
-      send(command);
+      if (val === 0 || val === 255) {
+        send(command);
+      } else {
+        slowSend(command);
+      }
     };
 
     // 已经连接蓝牙设备服务
@@ -436,7 +432,6 @@ export default defineComponent({
       setMode,
       onColorSelect,
       onLChange,
-      onLFinChange,
       getDev,
     };
   },
