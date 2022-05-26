@@ -19,7 +19,12 @@
                   { label: 'OFF', value: false },
                 ]"
               /> -->
-              <q-toggle keep-color color="blue-4" v-model="m.status" />
+              <q-toggle
+                keep-color
+                color="blue-4"
+                v-model="m.status"
+                @update:model-value="btnModeChged = false"
+              />
             </div>
           </q-item-section>
         </q-item>
@@ -27,7 +32,13 @@
       <q-list>
         <q-item>
           <q-item-section class="col-5 q-my-xs q-mx-auto">
-            <q-btn color="grey-7" label="confirm" @click="confirm" />
+            <q-btn
+              :disable="btnModeChged"
+              :color="btnModeChged ? 'grey-7' : 'grey-2'"
+              :text-color="btnModeChged ? 'grey-2' : 'grey-7'"
+              label="confirm"
+              @click="confirm"
+            />
           </q-item-section>
         </q-item>
       </q-list>
@@ -43,7 +54,9 @@ import { BleClient } from '@capacitor-community/bluetooth-le';
 export default defineComponent({
   name: 'SettingsPage',
   setup() {
-    //
+    // if btnMode value changed
+    const btnModeChged = ref(true);
+
     const bleStore = useBleStore();
     // const { btnMode } = storeToRefs(bleStore);
 
@@ -58,6 +71,7 @@ export default defineComponent({
     // };
 
     const confirm = async () => {
+      btnModeChged.value = true;
       let mode = 0; // mode number
       // calc mode number
       btnMode.value.forEach((m: BtnMode) => {
@@ -83,6 +97,7 @@ export default defineComponent({
 
     return {
       btnMode,
+      btnModeChged,
       confirm,
       // setFunc,
     };

@@ -20,8 +20,8 @@
       dense
       align="justify"
       indicator-color="transparent"
-      active-class="bg-grey-5 "
-      class="bg-grey-2 fixed-bottom text-grey-8"
+      active-class="bg-grey-2 "
+      class="bg-grey-5 fixed-bottom text-grey-8 index-tab"
     >
       <!-- narrow-indicator -->
       <q-tab name="panel" icon="las la-sun" label="panel" />
@@ -49,3 +49,11 @@ export default defineComponent({
   },
 });
 </script>
+<style lang="scss">
+.index-tab {
+  max-height: 44px;
+}
+.index-tab div {
+  font-size: 10px;
+}
+</style>

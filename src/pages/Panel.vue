@@ -49,6 +49,16 @@
             @click.stop="powerSwitch"
           />
         </div> -->
+        <q-space></q-space>
+        <color-picker
+          v-bind="color"
+          variant="persistent"
+          @input="onColorSelect"
+          @select="colorSelect"
+        >
+        </color-picker>
+
+        <q-space></q-space>
         <div class="row full-width justify-center q-mb-md">
           <div class="col-11">
             <q-slider
@@ -57,8 +67,14 @@
               :max="255"
               thumb-size="22px"
               track-size="16px"
-              color="grey-2"
+              color="grey-7"
+              :marker-labels="markerLable"
               @update:model-value="onLChange"
+              markers
+              :label-value="lVLabel"
+              switch-label-side
+              switch-marker-labels-side
+              label-always
             >
             </q-slider>
           </div>
@@ -74,12 +90,7 @@
             @update:model-value="setMode"
           />
         </div>
-        <color-picker
-          v-bind="color"
-          @input="onColorSelect"
-          variant="persistent"
-        >
-        </color-picker>
+
         <!-- params display window -->
         <div
           class="row q-pl-md q-mt-md q-mb-sm inset-shadow-down shadow-2 bg-grey-5 text-grey-7 q-py-sm display-box"
@@ -137,6 +148,18 @@ export default defineComponent({
   setup() {
     const router = useRouter();
     const bleStore = useBleStore();
+
+    const lVLabel = computed(() => {
+      return Math.floor(lVolume.value / 255) * 100 + '%';
+    });
+    // const markerLable = (val: number) => `${val}%`;
+    const markerLable = [
+      { value: 0, label: '0%' },
+      { value: 64, label: '25%' },
+      { value: 128, label: '50%' },
+      { value: 196, label: '75%' },
+      { value: 255, label: '100%' },
+    ];
     // Ble transparent transfer
 
     // current dev
@@ -414,6 +437,10 @@ export default defineComponent({
       send(command);
     };
 
+    const colorSelect = () => {
+      console.log('select');
+    };
+
     // onBeforeMount(init);
     // onMounted(getConnDev);
     onMounted(function () {
@@ -421,6 +448,8 @@ export default defineComponent({
     });
 
     return {
+      lVLabel,
+      markerLable,
       origColor,
       fmode, // flash mode
       fmodeOpt,
@@ -436,6 +465,7 @@ export default defineComponent({
       onColorSelect,
       onLChange,
       getDev,
+      colorSelect,
     };
   },
 });
