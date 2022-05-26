@@ -67,14 +67,16 @@
               :max="255"
               thumb-size="22px"
               track-size="16px"
-              color="grey-7"
+              track-color="grey-6"
+              color="grey-2"
+              label-color="grey-6"
               :marker-labels="markerLable"
               @update:model-value="onLChange"
-              markers
               :label-value="lVLabel"
-              switch-label-side
-              switch-marker-labels-side
               label-always
+              switch-marker-labels-side
+              switch-label-side
+              markers
             >
             </q-slider>
           </div>
@@ -149,9 +151,6 @@ export default defineComponent({
     const router = useRouter();
     const bleStore = useBleStore();
 
-    const lVLabel = computed(() => {
-      return Math.floor(lVolume.value / 255) * 100 + '%';
-    });
     // const markerLable = (val: number) => `${val}%`;
     const markerLable = [
       { value: 0, label: '0%' },
@@ -175,6 +174,10 @@ export default defineComponent({
 
     // light volume
     const lVolume = ref(255);
+
+    const lVLabel = computed(() => {
+      return Math.round((lVolume.value / 255) * 100) + '%';
+    });
 
     interface FModeOpt {
       label: string;
