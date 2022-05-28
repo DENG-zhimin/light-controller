@@ -17,7 +17,7 @@
             class="cursor-pointer text-center"
             @click.stop="getDev"
           >
-            无连接设备
+            No Device Connected
           </q-item-section>
         </q-item>
       </q-list>
@@ -38,7 +38,9 @@
         </q-card>
       </div> -->
       <!-- control panel -->
-      <div class="col column q-gutter-y-lg q-mb-lg items-center q-mt-md">
+      <div
+        class="col column full-width q-gutter-y-lg q-mb-lg items-center q-mt-md"
+      >
         <!-- power switch -->
         <!-- <div class="row justify-center q-mb-md">
           <q-btn
@@ -50,13 +52,15 @@
           />
         </div> -->
         <q-space></q-space>
-        <color-picker
-          v-bind="color"
-          variant="persistent"
-          @input="onColorSelect"
-          @select="colorSelect"
-        >
-        </color-picker>
+        <div class="row" v-if="showColorPicker">
+          <color-picker
+            v-bind="color"
+            variant="persistent"
+            @input="onColorInput"
+            @select="colorSelect"
+          >
+          </color-picker>
+        </div>
 
         <q-space></q-space>
         <div class="row full-width justify-center q-mb-md">
@@ -74,8 +78,6 @@
               @update:model-value="onLChange"
               :label-value="lVLabel"
               label-always
-              switch-marker-labels-side
-              switch-label-side
               markers
             >
             </q-slider>
@@ -198,6 +200,16 @@ export default defineComponent({
       return ret;
     });
 
+    const showColorPicker = computed(() => {
+      let val = false;
+      btnMode.value.forEach((mod) => {
+        if (mod.status && mod.mode === 'C') {
+          val = true;
+        }
+      });
+      return val;
+    });
+
     // 手电工作模式
     // const fmode = ref('M');
     let defMode = '';
@@ -238,8 +250,13 @@ export default defineComponent({
     const origColor = ref(<number[]>[]);
 
     // triggle at color ring change
-    const onColorSelect = (hue: number) => {
+    const onColorInput = (hue: number) => {
       color.hue = hue; // for number to display on page.
+      // change fmode if not equal to 'C'
+      if (fmode.value !== 'C') {
+        fmode.value = 'C';
+      }
+
       // let origCol = new Array(3)
       origColor.value = Convert.hsl.rgb([hue, 100, 50]); // convert color from hsl to rgb
       rgb.value = reblend(origColor.value);
@@ -248,6 +265,7 @@ export default defineComponent({
       slowSend(command); // send
     };
 
+    // reblend color. reduce rgb total from 0x1FF to FF
     const reblend = (data: number[]) => {
       const R = data[0];
       const G = data[1];
@@ -440,8 +458,10 @@ export default defineComponent({
       send(command);
     };
 
-    const colorSelect = () => {
-      console.log('select');
+    const colorSelect = (hue: number) => {
+      // send color
+      onColorInput(hue);
+      // console.log('select');
     };
 
     // onBeforeMount(init);
@@ -451,6 +471,7 @@ export default defineComponent({
     });
 
     return {
+      showColorPicker,
       lVLabel,
       markerLable,
       origColor,
@@ -465,7 +486,7 @@ export default defineComponent({
       // powerStat, // power status
       // powerSwitch,
       setMode,
-      onColorSelect,
+      onColorInput,
       onLChange,
       getDev,
       colorSelect,

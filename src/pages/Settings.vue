@@ -47,6 +47,7 @@
 </template>
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
+import { useQuasar } from 'quasar';
 import { useBleStore, BtnMode } from 'src/stores/ble';
 import { encode, bleDev } from 'src/utils/util';
 import { BleClient } from '@capacitor-community/bluetooth-le';
@@ -54,6 +55,7 @@ import { BleClient } from '@capacitor-community/bluetooth-le';
 export default defineComponent({
   name: 'SettingsPage',
   setup() {
+    const $q = useQuasar();
     // if btnMode value changed
     const btnModeChged = ref(true);
 
@@ -79,6 +81,11 @@ export default defineComponent({
           mode += 2 ** m.index;
         }
       });
+
+      if (mode === 0) {
+        $q.notify({ message: 'must have at least one function!' });
+        return null;
+      }
 
       bleStore.setBtnMode(mode); // change btnMode in Store
 
