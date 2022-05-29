@@ -57,6 +57,7 @@ export const useBleStore = defineStore('ble', {
   }),
   getters: {
     // doubleCount: (state) => state.counter * 2,
+    cntedDevLen: (state) => state.connectedDevs.length,
   },
   actions: {
     // increment() {

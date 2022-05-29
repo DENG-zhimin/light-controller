@@ -5,19 +5,19 @@
       class="row input-inline q-justify-center q-gutter-sm q-my-sm q-pa-sm"
     >
       <q-btn color="primary" :disable="error !== ''" @click.stop="conn"
-        >连接</q-btn
+        >Connect</q-btn
       >
       <q-btn
         color="negative"
         :disable="connectedDevs.length <= 0"
         @click.stop="disConnAll"
-        >断开</q-btn
+        >Disconnect</q-btn
       >
       <q-btn
         color="info"
         :disable="currDev.deviceId === ''"
         @click.stop="getSrvs"
-        >信息</q-btn
+        >Info</q-btn
       >
       <!--       <q-btn color="info" :disable="currDev.deviceId === ''" @click.stop="test"
         >test</q-btn
@@ -48,7 +48,7 @@
             style="min-height: 42px"
           >
             <!-- @click.stop="getDev" -->
-            未选择设备
+            No Current Device
           </q-item-section>
         </q-item>
       </q-list>
@@ -57,7 +57,7 @@
         class="q-my-md q-gutter-y-sm full-width"
         v-if="connectedDevs.length > 0"
       >
-        已连接设备：
+        Connected Device：
         <q-list bordered separator class="full-width">
           <q-item
             v-for="ble in connectedDevs"
@@ -119,6 +119,7 @@ import SrvsList from './BleSrvs.vue';
 // import encoder from 'src/utils/encoding';
 import { useBleStore } from 'src/stores/ble';
 import { storeToRefs } from 'pinia';
+import { bleDev, encode } from 'src/utils/util';
 // import { bleDev } from 'src/utils/util';
 
 export default defineComponent({
@@ -271,6 +272,21 @@ export default defineComponent({
     const bleConnected = (ble: BleDevice) => {
       bleStore.addConnected(ble);
       showBleConn.value = false;
+      // get device info, firmware version, etc.
+      getDeviceInfo(ble);
+    };
+
+    const getDeviceInfo = async (ble: BleDevice) => {
+      return null; // dev
+      const dataView = encode('Info');
+      await BleClient.write(
+        ble.deviceId,
+        bleDev.tc.srvId,
+        bleDev.tc.characteristicId,
+        dataView
+      ).then((res) => {
+        console.log(res);
+      });
     };
 
     const init = async () => {

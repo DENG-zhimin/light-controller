@@ -64,7 +64,7 @@
 
         <q-space></q-space>
         <div class="row full-width justify-center q-mb-md">
-          <div class="col-11">
+          <div class="col-11" style="max-width: 400px">
             <q-slider
               v-model="lVolume"
               :min="0"
@@ -78,7 +78,6 @@
               @update:model-value="onLChange"
               :label-value="lVLabel"
               label-always
-              markers
             >
             </q-slider>
           </div>
@@ -321,9 +320,15 @@ export default defineComponent({
     // on light volume change
     const onLChange = (val: number | null) => {
       if (val === null) return false;
+      // when change light Volume, no fmode is matched.
+      fmode.value = '';
+      // prepare command dataView
       const command = encode('W', val);
       if (val === 0 || val === 255) {
-        send(command);
+        // send immediate
+        setTimeout(() => {
+          send(command);
+        }, 100);
       } else {
         slowSend(command);
       }
