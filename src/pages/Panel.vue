@@ -22,64 +22,46 @@
         </q-item>
       </q-list>
 
-      <!-- <div class="q-my-md q-gutter-y-sm" v-if="connectedDev.length > 0">
-        已连接设备：
-        <q-card v-for="(ble, index) in connectedDev" :key="index">
-          <q-card-section
-            :class="
-              ble.deviceId === currDev.deviceId ? 'bg-primary text-white' : ''
-            "
-            clickable
-            v-ripple
-            @click.stop="selDev(ble)"
-          >
-            {{ ble.name + ' -- ' + ble.deviceId }}
-          </q-card-section>
-        </q-card>
-      </div> -->
-      <!-- control panel -->
       <div
         class="col column full-width q-gutter-y-lg q-mb-lg items-center q-mt-md"
       >
-        <!-- power switch -->
-        <!-- <div class="row justify-center q-mb-md">
-          <q-btn
-            round
-            :icon="powerStat ? 'las la-sun ' : 'las la-power-off'"
-            :color="powerStat ? 'grey-2' : 'grey-6'"
-            :text-color="powerStat ? 'grey-6' : 'grey-2'"
-            @click.stop="powerSwitch"
+        <!-- <q-space></q-space> -->
+        <div>
+          <q-color
+            v-model="hex"
+            no-header
+            no-footer
+            class="my-picker"
+            :disable="colorPickerStat"
           />
-        </div> -->
-        <q-space></q-space>
-        <div class="row" v-if="showColorPicker">
-          <color-picker
-            v-bind="color"
-            variant="persistent"
-            @input="onColorInput"
-            @select="colorSelect"
-          >
-          </color-picker>
+          <div>
+            {{ hex }}
+          </div>
+          <div>
+            {{ lVolume }}
+          </div>
         </div>
-
-        <q-space></q-space>
+        <!-- <q-space></q-space> -->
         <div class="row full-width justify-center q-mb-md">
-          <div class="col-11" style="max-width: 400px">
+          <div class="col-10 row" style="max-width: 400px">
             <q-slider
               v-model="lVolume"
-              :min="0"
+              :min="-255"
               :max="255"
-              thumb-size="22px"
-              track-size="16px"
-              track-color="grey-6"
-              color="grey-2"
+              thumb-size="16px"
+              thumb-color="grey-8"
+              track-size="20px"
+              track-color="transparent"
+              color="transparent"
               label-color="grey-6"
-              :marker-labels="markerLable"
               @update:model-value="onLChange"
               :label-value="lVLabel"
               label-always
+              class="my-slider"
             >
+              <!-- thumb-path="1,0 -12,0" -->
             </q-slider>
+            <div class="wb full-width"></div>
           </div>
         </div>
         <div class="q-mb-lg">
@@ -138,7 +120,7 @@ import {
   watch,
 } from 'vue';
 import { BleClient, BleService } from '@capacitor-community/bluetooth-le';
-import ColorPicker from '@radial-color-picker/vue-color-picker';
+// import ColorPicker from '@radial-color-picker/vue-color-picker';
 import Convert from 'color-convert';
 import { useRouter } from 'vue-router';
 import { useBleStore } from 'src/stores/ble';
@@ -147,10 +129,16 @@ import { bleDev, encode } from 'src/utils/util';
 
 export default defineComponent({
   name: 'PanelPage',
-  components: { ColorPicker },
+  components: {},
   setup() {
     const router = useRouter();
     const bleStore = useBleStore();
+
+    // color picker value
+    const hex = ref('#3040CC');
+
+    // color picker status
+    const colorPickerStat = ref(false); // default enabled
 
     // const markerLable = (val: number) => `${val}%`;
     const markerLable = [
@@ -177,7 +165,12 @@ export default defineComponent({
     const lVolume = ref(255);
 
     const lVLabel = computed(() => {
-      return Math.round((lVolume.value / 255) * 100) + '%';
+      let ret = lVolume.value;
+      if (ret < 0) {
+        ret = ret * -1;
+      }
+      return ret;
+      // return Math.round((lVolume.value / 255) * 100) + '%';
     });
 
     interface FModeOpt {
@@ -476,6 +469,8 @@ export default defineComponent({
     });
 
     return {
+      hex,
+      colorPickerStat,
       showColorPicker,
       lVLabel,
       markerLable,
@@ -513,5 +508,22 @@ export default defineComponent({
 .display-box {
   border-radius: 8px;
   border: solid 1px white;
+}
+
+.my-picker {
+  width: 300px;
+}
+
+.wb {
+  height: 20px;
+  // background-color: #f00;
+  // background-image: linear-gradient(to right, #9494ff, #fff, #ff9494);
+  background-image: linear-gradient(to right, #0000ff, #fff, #ff0000);
+  position: relative;
+  top: -32px;
+}
+
+.my-slider {
+  z-index: 999;
 }
 </style>
