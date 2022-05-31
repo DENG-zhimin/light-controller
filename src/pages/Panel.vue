@@ -26,7 +26,7 @@
         class="col column full-width q-gutter-y-lg q-mb-lg items-center q-mt-md"
       >
         <!-- <q-space></q-space> -->
-        <div>
+        <div v-if="memMode === 'c'">
           <q-color
             v-model="hex"
             no-header
@@ -42,7 +42,10 @@
           </div>
         </div>
         <!-- <q-space></q-space> -->
-        <div class="row full-width justify-center q-mb-md">
+        <div
+          v-if="memMode === 'w'"
+          class="row full-width justify-center q-mb-md"
+        >
           <div class="col-10 row" style="max-width: 400px">
             <q-slider
               v-model="lVolume"
@@ -136,6 +139,9 @@ export default defineComponent({
 
     // color picker value
     const hex = ref('#3040CC');
+
+    // memery mode
+    const memMode = ref('c'); // c: color, w: whitebalance
 
     // color picker status
     const colorPickerStat = ref(false); // default enabled
@@ -469,6 +475,7 @@ export default defineComponent({
     });
 
     return {
+      memMode,
       hex,
       colorPickerStat,
       showColorPicker,
