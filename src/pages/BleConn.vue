@@ -30,14 +30,14 @@
 import { defineComponent, ref, onMounted } from 'vue';
 import { BleClient, BleDevice } from '@capacitor-community/bluetooth-le';
 import { useQuasar } from 'quasar';
-import { useBleStore } from 'src/stores/ble';
+import { useFlashStore } from 'src/stores/flashlight';
 
 export default defineComponent({
   name: 'BleConn',
   emits: ['bleConnected'],
   setup(props, ctx) {
     const $q = useQuasar();
-    const bleStore = useBleStore();
+    const bleStore = useFlashStore();
     const results = ref<BleDevice[]>([]);
     const scanning = ref(false);
     // const tried_scanning = ref(false);

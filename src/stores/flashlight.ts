@@ -5,53 +5,46 @@ import {
 } from '@capacitor-community/bluetooth-le';
 
 export interface BtnMode {
+  label: string;
   mode: string;
-  index: number;
-  status: boolean;
 }
 
-export const useBleStore = defineStore('ble', {
+export const useFlashStore = defineStore('FlashLight', {
   state: () => ({
     currDev: <BleDevice>{
       name: '',
       deviceId: '',
     },
+    currBtn: <BtnMode>{},
     connectedDevs: <BleDevice[]>[],
-    btnMode: <BtnMode[]>[
+    btnMems: <BtnMode[]>[
       {
-        mode: 'H',
-        index: 6,
-        status: true,
-      },
-      {
-        mode: 'M',
-        index: 5,
-        status: true,
-      },
-      {
-        mode: 'L',
-        index: 4,
-        status: true,
-      },
-      {
+        label: 'M1',
         mode: 'C',
-        index: 3,
-        status: true,
       },
       {
-        mode: 'F1',
-        index: 2,
-        status: true,
+        label: 'M2',
+        mode: 'W',
       },
       {
-        mode: 'F2',
-        index: 1,
-        status: true,
+        label: 'M3',
+        mode: 'W',
       },
       {
-        mode: 'SOS',
-        index: 0,
-        status: true,
+        label: 'M4',
+        mode: 'W',
+      },
+      {
+        label: 'M5',
+        mode: 'W',
+      },
+      {
+        label: 'M6',
+        mode: 'W',
+      },
+      {
+        label: 'M7',
+        mode: 'W',
       },
     ],
   }),
@@ -91,14 +84,8 @@ export const useBleStore = defineStore('ble', {
         this.currDev.deviceId = '';
       }
     },
-    setBtnMode(data: number) {
-      this.btnMode.forEach((mode, index) => {
-        if (data & (2 ** mode.index)) {
-          this.btnMode[index].status = true;
-        } else {
-          this.btnMode[index].status = false;
-        }
-      });
+    setCurrBtn(btn: BtnMode) {
+      this.currBtn = btn;
     },
   },
 });

@@ -117,7 +117,7 @@ import { useQuasar } from 'quasar';
 import BleConn from './BleConn.vue';
 import SrvsList from './BleSrvs.vue';
 // import encoder from 'src/utils/encoding';
-import { useBleStore } from 'src/stores/ble';
+import { useFlashStore } from 'src/stores/flashlight';
 import { storeToRefs } from 'pinia';
 import { bleDev, encode } from 'src/utils/util';
 // import { bleDev } from 'src/utils/util';
@@ -126,7 +126,7 @@ export default defineComponent({
   name: 'BleDev',
   components: { BleConn, SrvsList },
   setup() {
-    const bleStore = useBleStore();
+    const bleStore = useFlashStore();
     // Ble transparent transfer
 
     // const welcome = ref(true)

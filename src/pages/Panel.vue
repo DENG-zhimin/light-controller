@@ -26,64 +26,122 @@
         class="col column full-width q-gutter-y-lg q-mb-lg items-center q-mt-md"
       >
         <!-- <q-space></q-space> -->
-        <div v-if="memMode === 'c'">
+        <div v-if="currBtn.mode === 'C'">
           <q-color
             v-model="hex"
             no-header
             no-footer
             class="my-picker"
-            :disable="colorPickerStat"
+            :disable="tuneFlag"
           />
-          <div>
-            {{ hex }}
-          </div>
-          <div>
-            {{ lVolume }}
-          </div>
         </div>
         <!-- <q-space></q-space> -->
         <div
-          v-if="memMode === 'w'"
+          v-if="currBtn.mode === 'W'"
           class="row full-width justify-center q-mb-md"
         >
-          <div class="col-10 row" style="max-width: 400px">
+          <!-- white balance slider -->
+          <div class="col-11 row items-center">
+            <!-- style="max-width: 500px" -->
+            <div class="col-1 text-center q-pt-md">
+              <q-btn
+                rounded
+                padding="none"
+                icon="las la-angle-left"
+                @click="wBVal -= 1"
+                class="q-mr-sm"
+                :disable="tuneFlag"
+              />
+              <!-- v-touch-repeat.mouse="wBValRepeat" -->
+            </div>
+            <div class="col-10 row items-center">
+              <!-- style="height: 100px" -->
+              <div class="full-width" style="position: relative">
+                <div class="wb full-width"></div>
+                <q-slider
+                  v-model="wBVal"
+                  :min="-255"
+                  :max="255"
+                  thumb-size="16px"
+                  thumb-color="grey-8"
+                  track-size="20px"
+                  track-color="transparent"
+                  color="transparent"
+                  label-color="grey-6"
+                  @update:model-value="onLChange"
+                  :label-value="wBLabel"
+                  class="my-slider"
+                  :disable="tuneFlag"
+                  label-always
+                />
+                <!-- thumb-path="1,0 -12,0" -->
+              </div>
+            </div>
+            <div class="col-1 text-center q-pt-md">
+              <q-btn
+                rounded
+                padding="none"
+                @click="wBVal += 1"
+                icon="las la-angle-right"
+                class="q-ml-sm"
+                :disable="tuneFlag"
+              />
+            </div>
+          </div>
+          <!-- light volume slider -->
+          <div class="col-10 row q-mt-lg" style="max-width: 400px">
             <q-slider
-              v-model="lVolume"
-              :min="-255"
+              v-model="lVVal"
+              :min="0"
               :max="255"
               thumb-size="16px"
               thumb-color="grey-8"
               track-size="20px"
-              track-color="transparent"
-              color="transparent"
+              track-color="grey-5"
+              color="grey-2"
               label-color="grey-6"
               @update:model-value="onLChange"
               :label-value="lVLabel"
               label-always
-              class="my-slider"
+              :disable="tuneFlag"
             >
               <!-- thumb-path="1,0 -12,0" -->
             </q-slider>
-            <div class="wb full-width"></div>
           </div>
         </div>
-        <div class="q-mb-lg">
-          <q-btn-toggle
-            v-model="fmode"
-            color="grey-5"
-            toggle-color="grey-2"
-            toggle-text-color="grey-7"
-            :options="fmodeOpt"
-            class="full-width"
-            @update:model-value="setMode"
-          />
+
+        <div class="q-mb-lg shadow-1 q-pa-sm btn-grp">
+          <div class="row justify-evenly">
+            <q-btn size="sm" @click="tuneFlag = false"> TUNE</q-btn>
+            <q-btn size="sm"> CONFIRM</q-btn>
+          </div>
+          <div>
+            {{ hex }}
+          </div>
+          <div>
+            {{ lVVal }}
+          </div>
+          <div>
+            {{ currBtn }}
+          </div>
+          <hr />
+          <div class="row justify-center q-gutter-sm">
+            <q-btn
+              v-for="btn in btnMems"
+              :key="btn.label"
+              :label="btn.label"
+              @click.stop="setCurrBtn(btn)"
+              :color="btn.label === currBtn.label ? 'grey-2' : 'grey-6'"
+              :text-color="btn.label === currBtn.label ? 'grey-6' : 'grey-2'"
+            />
+          </div>
         </div>
 
         <!-- params display window -->
         <div
-          class="row q-pl-md q-mt-md q-mb-sm inset-shadow-down shadow-2 bg-grey-5 text-grey-7 q-py-sm display-box"
+          class="row q-pl-md q-mt-md q-mb-sm shadow-4 bg-grey-4 text-grey-7 q-py-sm display-box"
           style="width: 70%"
-          v-if="false"
+          v-if="true"
         >
           <div class="row item-center q-gutter-y-sm">
             <!-- <div class="full-width row col-12 justify-center">
@@ -92,11 +150,7 @@
             </div> -->
             <div class="full-width row col-12 justify-center">
               <div class="col-4 text-right">亮度：</div>
-              <div class="col-7 q-pl-md">{{ lVolume }}</div>
-            </div>
-            <div class="full-width row col-12 justify-center">
-              <div class="col-4 text-right">模式：</div>
-              <div class="col-7 q-pl-md">{{ fmode }}</div>
+              <div class="col-7 q-pl-md">{{ lVVal }}</div>
             </div>
             <!--             <div class="full-width row col-12 justify-center">
               <div class="col-4 text-right">RGB 1：</div>
@@ -120,13 +174,13 @@ import {
   onMounted,
   reactive,
   computed,
-  watch,
+  // watch,
 } from 'vue';
 import { BleClient, BleService } from '@capacitor-community/bluetooth-le';
 // import ColorPicker from '@radial-color-picker/vue-color-picker';
 import Convert from 'color-convert';
 import { useRouter } from 'vue-router';
-import { useBleStore } from 'src/stores/ble';
+import { useFlashStore, BtnMode } from 'src/stores/flashlight';
 import { storeToRefs } from 'pinia';
 import { bleDev, encode } from 'src/utils/util';
 
@@ -135,7 +189,9 @@ export default defineComponent({
   components: {},
   setup() {
     const router = useRouter();
-    const bleStore = useBleStore();
+    const flashStore = useFlashStore();
+
+    // var intervalHandler = 0;
 
     // color picker value
     const hex = ref('#3040CC');
@@ -144,7 +200,7 @@ export default defineComponent({
     const memMode = ref('c'); // c: color, w: whitebalance
 
     // color picker status
-    const colorPickerStat = ref(false); // default enabled
+    const tuneFlag = ref(true); // default enabled
 
     // const markerLable = (val: number) => `${val}%`;
     const markerLable = [
@@ -157,7 +213,7 @@ export default defineComponent({
     // Ble transparent transfer
 
     // current dev
-    let { currDev, btnMode } = storeToRefs(bleStore);
+    const { currDev, currBtn, btnMems } = storeToRefs(flashStore);
 
     const ble_enabled = ref(false);
     // const see_all = ref(false)
@@ -167,11 +223,11 @@ export default defineComponent({
 
     // const powerStat = ref(false);
 
-    // light volume
-    const lVolume = ref(255);
+    // white balance
+    const wBVal = ref(0);
 
-    const lVLabel = computed(() => {
-      let ret = lVolume.value;
+    const wBLabel = computed(() => {
+      let ret = wBVal.value;
       if (ret < 0) {
         ret = ret * -1;
       }
@@ -179,59 +235,12 @@ export default defineComponent({
       // return Math.round((lVolume.value / 255) * 100) + '%';
     });
 
-    interface FModeOpt {
-      label: string;
-      value: string;
-    }
+    // light volume value
+    const lVVal = ref(127);
 
-    const fmodeOpt = computed(() => {
-      let ret = <FModeOpt[]>[];
-      btnMode.value.forEach((mod) => {
-        if (mod.status) {
-          const newMod = {
-            label: mod.mode,
-            value: mod.mode,
-          };
-          ret.push(newMod);
-        }
-      });
-      return ret;
-    });
-
-    const showColorPicker = computed(() => {
-      let val = false;
-      btnMode.value.forEach((mod) => {
-        if (mod.status && mod.mode === 'C') {
-          val = true;
-        }
-      });
-      return val;
-    });
-
-    // 手电工作模式
-    // const fmode = ref('M');
-    let defMode = '';
-    if (fmodeOpt.value.length > 0) {
-      defMode = fmodeOpt.value[0].value; // default mode
-    }
-    const fmode = ref(defMode);
-
-    // watch the mode value to adjust the light volume.
-    watch(fmode, (newVal) => {
-      switch (newVal) {
-        case 'H':
-          lVolume.value = 255;
-          break;
-        case 'M':
-          lVolume.value = 127;
-          break;
-        case 'L':
-          lVolume.value = 64;
-          break;
-        default:
-          // lVolume.value = 127;
-          break;
-      }
+    // light volume slider lable
+    const lVLabel = computed(() => {
+      return Math.round((lVVal.value / 255) * 100) + '%';
     });
 
     // light color
@@ -251,9 +260,6 @@ export default defineComponent({
     const onColorInput = (hue: number) => {
       color.hue = hue; // for number to display on page.
       // change fmode if not equal to 'C'
-      if (fmode.value !== 'C') {
-        fmode.value = 'C';
-      }
 
       // let origCol = new Array(3)
       origColor.value = Convert.hsl.rgb([hue, 100, 50]); // convert color from hsl to rgb
@@ -320,7 +326,6 @@ export default defineComponent({
     const onLChange = (val: number | null) => {
       if (val === null) return false;
       // when change light Volume, no fmode is matched.
-      fmode.value = '';
       // prepare command dataView
       const command = encode('W', val);
       if (val === 0 || val === 255) {
@@ -433,33 +438,9 @@ export default defineComponent({
 
     // set flashligt mode
     const setMode = () => {
-      let param1 = 0,
-        param2 = 0,
-        param3 = 0;
-      let comm = fmode.value;
-      switch (fmode.value) {
-        case 'H':
-          comm = 'W';
-          param1 = 255;
-          break;
-        case 'M':
-          comm = 'W';
-          param1 = 128;
-          break;
-        case 'L':
-          comm = 'W';
-          param1 = 50;
-          break;
-        case 'C':
-          param1 = rgb.value[0];
-          param2 = rgb.value[1];
-          param3 = rgb.value[2];
-          break;
-        default:
-          break;
-      }
-      const command = encode(comm, param1, param2, param3);
-      send(command);
+      //
+      // const command = encode(comm, param1, param2, param3);
+      // send(command);
     };
 
     const colorSelect = (hue: number) => {
@@ -468,42 +449,63 @@ export default defineComponent({
       // console.log('select');
     };
 
+    // mem-mode
+    const setCurrBtn = (btn: BtnMode) => {
+      tuneFlag.value = true;
+      flashStore.setCurrBtn(btn);
+    };
+
+    //
+    const wBValRepeat = ({ ...newInfo }) => {
+      //
+      console.log(newInfo);
+    };
+
+    const stopInterval = () => {
+      clearInterval();
+    };
+
     // onBeforeMount(init);
     // onMounted(getConnDev);
     onMounted(function () {
       init();
+      // set first btn to be the current btn
+      flashStore.setCurrBtn(btnMems.value[0]);
     });
 
     return {
+      currBtn,
       memMode,
       hex,
-      colorPickerStat,
-      showColorPicker,
-      lVLabel,
+      tuneFlag,
       markerLable,
       origColor,
-      fmode, // flash mode
-      fmodeOpt,
       bleSrvs,
       currDev,
       error,
       color,
       rgb,
-      lVolume, // light volume, luminosity
-      // powerStat, // power status
-      // powerSwitch,
+      lVVal, // light volume, luminosity
+      lVLabel,
+      wBVal,
+      wBLabel,
+      btnMems,
       setMode,
       onColorInput,
       onLChange,
       getDev,
       colorSelect,
+      // mem-mode
+      setCurrBtn,
+      wBValRepeat,
+      stopInterval,
     };
   },
 });
 </script>
 
 <style lang="scss" scoped>
-@import '@radial-color-picker/vue-color-picker/dist/vue-color-picker.css';
+// @import '@radial-color-picker/vue-color-picker/dist/vue-color-picker.css';
 
 .dialog-frame {
   min-width: 300px;
@@ -514,7 +516,7 @@ export default defineComponent({
 
 .display-box {
   border-radius: 8px;
-  border: solid 1px white;
+  border: solid 1px $grey-1;
 }
 
 .my-picker {
@@ -526,11 +528,19 @@ export default defineComponent({
   // background-color: #f00;
   // background-image: linear-gradient(to right, #9494ff, #fff, #ff9494);
   background-image: linear-gradient(to right, #0000ff, #fff, #ff0000);
-  position: relative;
-  top: -32px;
+  position: absolute;
+  top: 0px;
+  // margin: 0px auto;
 }
 
 .my-slider {
-  z-index: 999;
+  // margin: 0px auto;
+  position: absolute;
+  top: -12px;
+}
+
+.btn-grp {
+  position: absolute;
+  bottom: 35px;
 }
 </style>

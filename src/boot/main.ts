@@ -1,7 +1,7 @@
 import { boot } from 'quasar/wrappers';
-import { useBleStore } from 'src/stores/ble';
+import { useFlashStore } from 'src/stores/flashlight';
 
-const Ble = useBleStore();
+const Ble = useFlashStore();
 
 /**
  * Navigation guard and permission verification
