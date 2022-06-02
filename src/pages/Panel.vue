@@ -23,7 +23,7 @@
       </q-list>
 
       <div
-        class="col column full-width q-gutter-y-lg q-mb-lg items-center q-mt-md"
+        class="col column full-width q-gutter-y-lg q-mb-lg items-center q-mt-sm"
       >
         <!-- <q-space></q-space> -->
         <div v-if="currBtn.mode === 'C'">
@@ -38,30 +38,30 @@
         <!-- <q-space></q-space> -->
         <div
           v-if="currBtn.mode === 'W'"
-          class="row full-width justify-center q-mb-md"
+          class="col-3 column full-width justify-between q-my-md"
         >
           <!-- white balance slider -->
-          <div class="col-11 row items-center">
+          <div class="row items-center full-width">
             <!-- style="max-width: 500px" -->
             <div class="col-1 text-center q-pt-md">
               <q-btn
                 rounded
                 padding="none"
                 icon="las la-angle-left"
-                @click="wBVal -= 1"
-                class="q-mr-sm"
                 :disable="tuneFlag"
+                v-touch-repeat.mouse="wBValCountDown"
               />
-              <!-- v-touch-repeat.mouse="wBValRepeat" -->
+              <!-- @click="wBVal -= 1" -->
             </div>
-            <div class="col-10 row items-center">
+            <div class="col-10 row items-center q-px-xs">
               <!-- style="height: 100px" -->
               <div class="full-width" style="position: relative">
                 <div class="wb full-width"></div>
+                <!-- track-color="transparent" -->
                 <q-slider
                   v-model="wBVal"
-                  :min="-255"
-                  :max="255"
+                  :min="-127"
+                  :max="127"
                   thumb-size="16px"
                   thumb-color="grey-8"
                   track-size="20px"
@@ -81,32 +81,57 @@
               <q-btn
                 rounded
                 padding="none"
-                @click="wBVal += 1"
                 icon="las la-angle-right"
-                class="q-ml-sm"
                 :disable="tuneFlag"
+                v-touch-repeat.mouse="wBValCountUp"
               />
             </div>
           </div>
           <!-- light volume slider -->
-          <div class="col-10 row q-mt-lg" style="max-width: 400px">
-            <q-slider
-              v-model="lVVal"
-              :min="0"
-              :max="255"
-              thumb-size="16px"
-              thumb-color="grey-8"
-              track-size="20px"
-              track-color="grey-5"
-              color="grey-2"
-              label-color="grey-6"
-              @update:model-value="onLChange"
-              :label-value="lVLabel"
-              label-always
-              :disable="tuneFlag"
-            >
-              <!-- thumb-path="1,0 -12,0" -->
-            </q-slider>
+          <div class="row items-center full-width">
+            <!-- style="max-width: 500px" -->
+            <div class="col-1 text-center q-pt-md">
+              <q-btn
+                rounded
+                padding="none"
+                icon="las la-angle-left"
+                :disable="tuneFlag"
+                v-touch-repeat.mouse="lValCountDown"
+              />
+              <!-- @click="wBVal -= 1" -->
+            </div>
+            <div class="col-10 row items-center q-px-xs">
+              <!-- style="height: 100px" -->
+              <div class="full-width" style="position: relative">
+                <div class="lv-bar full-width"></div>
+                <q-slider
+                  v-model="lVVal"
+                  :min="0"
+                  :max="255"
+                  thumb-size="16px"
+                  thumb-color="grey-8"
+                  track-size="0px"
+                  track-color="transparent"
+                  color="transparent"
+                  label-color="grey-6"
+                  @update:model-value="onLChange"
+                  :label-value="lVLabel"
+                  class="my-slider"
+                  :disable="tuneFlag"
+                  label-always
+                />
+                <!-- thumb-path="1,0 -12,0" -->
+              </div>
+            </div>
+            <div class="col-1 text-center q-pt-md">
+              <q-btn
+                rounded
+                padding="none"
+                icon="las la-angle-right"
+                :disable="tuneFlag"
+                v-touch-repeat.mouse="lValCountUp"
+              />
+            </div>
           </div>
         </div>
 
@@ -327,6 +352,7 @@ export default defineComponent({
       if (val === null) return false;
       // when change light Volume, no fmode is matched.
       // prepare command dataView
+      console.log(val);
       const command = encode('W', val);
       if (val === 0 || val === 255) {
         // send immediate
@@ -456,9 +482,31 @@ export default defineComponent({
     };
 
     //
-    const wBValRepeat = ({ ...newInfo }) => {
+    const wBValCountDown = ({ ...newInfo }) => {
       //
-      console.log(newInfo);
+      if (wBVal.value < -254) return null;
+      const { repeatCount } = newInfo;
+      wBVal.value -= repeatCount;
+    };
+    const wBValCountUp = ({ ...newInfo }) => {
+      //
+      if (wBVal.value > 254) return null;
+      const { repeatCount } = newInfo;
+      wBVal.value += repeatCount;
+    };
+
+    //
+    const lValCountDown = ({ ...newInfo }) => {
+      //
+      if (lVVal.value < 1) return null;
+      const { repeatCount } = newInfo;
+      lVVal.value -= repeatCount;
+    };
+    const lValCountUp = ({ ...newInfo }) => {
+      //
+      if (lVVal.value > 254) return null;
+      const { repeatCount } = newInfo;
+      lVVal.value += repeatCount;
     };
 
     const stopInterval = () => {
@@ -497,7 +545,10 @@ export default defineComponent({
       colorSelect,
       // mem-mode
       setCurrBtn,
-      wBValRepeat,
+      wBValCountDown,
+      wBValCountUp,
+      lValCountDown,
+      lValCountUp,
       stopInterval,
     };
   },
@@ -526,8 +577,17 @@ export default defineComponent({
 .wb {
   height: 20px;
   // background-color: #f00;
+  background-image: linear-gradient(to right, #9494ff, #fff, #ff9494);
+  // background-image: linear-gradient(to right, #0000ff, #fff, #ff0000);
+  position: absolute;
+  top: 0px;
+  // margin: 0px auto;
+}
+.lv-bar {
+  height: 20px;
+  // background-color: #f00;
   // background-image: linear-gradient(to right, #9494ff, #fff, #ff9494);
-  background-image: linear-gradient(to right, #0000ff, #fff, #ff0000);
+  background-image: linear-gradient(to right, $grey-10, #fff);
   position: absolute;
   top: 0px;
   // margin: 0px auto;

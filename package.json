@@ -16,6 +16,7 @@
     "@radial-color-picker/vue-color-picker": "^5.0.1",
     "axios": "^0.21.1",
     "color-convert": "^2.0.1",
+    "color-temperature": "^0.2.7",
     "core-js": "^3.6.5",
     "pinia": "^2.0.11",
     "quasar": "^2.6.0",
