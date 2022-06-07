@@ -6,7 +6,12 @@ import {
 
 export interface BtnMode {
   label: string;
-  mode: string;
+  index: number;
+  stat: boolean;
+  // mode: string;
+  P1: number;
+  P2: number;
+  P3: number;
 }
 
 export const useFlashStore = defineStore('FlashLight', {
@@ -20,31 +25,33 @@ export const useFlashStore = defineStore('FlashLight', {
     btnMems: <BtnMode[]>[
       {
         label: 'M1',
-        mode: 'C',
+        index: 1,
+        stat: true,
       },
       {
         label: 'M2',
-        mode: 'W',
+        index: 2,
+        stat: true,
       },
       {
         label: 'M3',
-        mode: 'W',
+        index: 3,
+        stat: false,
       },
       {
         label: 'M4',
-        mode: 'W',
+        index: 4,
+        stat: true,
       },
       {
         label: 'M5',
-        mode: 'W',
+        index: 5,
+        stat: false,
       },
       {
         label: 'M6',
-        mode: 'W',
-      },
-      {
-        label: 'M7',
-        mode: 'W',
+        index: 6,
+        stat: true,
       },
     ],
   }),

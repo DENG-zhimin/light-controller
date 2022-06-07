@@ -26,9 +26,9 @@
         class="col column full-width q-gutter-y-lg q-mb-lg items-center q-mt-sm"
       >
         <!-- <q-space></q-space> -->
-        <div v-if="currBtn.mode === 'C'">
+        <div v-if="currBtn.index < 4">
           <q-color
-            v-model="hex"
+            v-model="rgb"
             no-header
             no-footer
             class="my-picker"
@@ -37,7 +37,7 @@
         </div>
         <!-- <q-space></q-space> -->
         <div
-          v-if="currBtn.mode === 'W'"
+          v-if="currBtn.index > 3"
           class="col-3 column full-width justify-between q-my-md"
         >
           <!-- white balance slider -->
@@ -60,15 +60,15 @@
                 <!-- track-color="transparent" -->
                 <q-slider
                   v-model="wBVal"
-                  :min="-127"
-                  :max="127"
+                  :min="-maxWBVal"
+                  :max="maxWBVal"
                   thumb-size="16px"
                   thumb-color="grey-8"
                   track-size="20px"
                   track-color="transparent"
                   color="transparent"
                   label-color="grey-6"
-                  @update:model-value="onLChange"
+                  @update:model-value="onWBLChange"
                   :label-value="wBLabel"
                   class="my-slider"
                   :disable="tuneFlag"
@@ -106,21 +106,20 @@
                 <div class="lv-bar full-width"></div>
                 <q-slider
                   v-model="lVVal"
-                  :min="0"
-                  :max="255"
+                  :min="minLVol"
+                  :max="maxLVol"
                   thumb-size="16px"
                   thumb-color="grey-8"
                   track-size="0px"
                   track-color="transparent"
                   color="transparent"
                   label-color="grey-6"
-                  @update:model-value="onLChange"
+                  @update:model-value="onWBLChange"
                   :label-value="lVLabel"
-                  class="my-slider"
                   :disable="tuneFlag"
                   label-always
+                  style="top: -2px; position: absolute"
                 />
-                <!-- thumb-path="1,0 -12,0" -->
               </div>
             </div>
             <div class="col-1 text-center q-pt-md">
@@ -141,22 +140,32 @@
             <q-btn size="sm"> CONFIRM</q-btn>
           </div>
           <div>
-            {{ hex }}
+            {{ rgb }}
           </div>
           <div>
             {{ lVVal }}
           </div>
           <div>
-            {{ currBtn }}
+            {{ wBFin }}
           </div>
           <hr />
-          <div class="row justify-center q-gutter-sm">
+          <div class="row justify-center q-gutter-x-md q-mb-sm">
             <q-btn
-              v-for="btn in btnMems"
+              v-for="btn in btnGrp1"
               :key="btn.label"
               :label="btn.label"
               @click.stop="setCurrBtn(btn)"
-              :color="btn.label === currBtn.label ? 'grey-2' : 'grey-6'"
+              :text-color="btn.label === currBtn.label ? 'grey-6' : 'grey-2'"
+              :color="getBtnStyle(btn)"
+            />
+          </div>
+          <div class="row justify-center q-gutter-x-md">
+            <q-btn
+              v-for="btn in btnGrp2"
+              :key="btn.label"
+              :label="btn.label"
+              @click.stop="setCurrBtn(btn)"
+              :color="getBtnStyle(btn)"
               :text-color="btn.label === currBtn.label ? 'grey-6' : 'grey-2'"
             />
           </div>
@@ -203,7 +212,7 @@ import {
 } from 'vue';
 import { BleClient, BleService } from '@capacitor-community/bluetooth-le';
 // import ColorPicker from '@radial-color-picker/vue-color-picker';
-import Convert from 'color-convert';
+// import Convert from 'color-convert';
 import { useRouter } from 'vue-router';
 import { useFlashStore, BtnMode } from 'src/stores/flashlight';
 import { storeToRefs } from 'pinia';
@@ -219,7 +228,7 @@ export default defineComponent({
     // var intervalHandler = 0;
 
     // color picker value
-    const hex = ref('#3040CC');
+    const rgb = ref('rgb(0,0,0)');
 
     // memery mode
     const memMode = ref('c'); // c: color, w: whitebalance
@@ -240,6 +249,26 @@ export default defineComponent({
     // current dev
     const { currDev, currBtn, btnMems } = storeToRefs(flashStore);
 
+    const btnGrp1 = computed(() => {
+      const ret = <BtnMode[]>[];
+      btnMems.value.forEach((e) => {
+        if (e.index < 4) {
+          ret.push(e);
+        }
+      });
+      return ret;
+    });
+
+    const btnGrp2 = computed(() => {
+      const ret = <BtnMode[]>[];
+      btnMems.value.forEach((e) => {
+        if (e.index > 3) {
+          ret.push(e);
+        }
+      });
+      return ret;
+    });
+
     const ble_enabled = ref(false);
     // const see_all = ref(false)
     const error = ref('');
@@ -249,7 +278,9 @@ export default defineComponent({
     // const powerStat = ref(false);
 
     // white balance
+    const maxWBVal = 127;
     const wBVal = ref(0);
+    const wBFin = ref([0, 0]); // [red,blue]
 
     const wBLabel = computed(() => {
       let ret = wBVal.value;
@@ -262,6 +293,8 @@ export default defineComponent({
 
     // light volume value
     const lVVal = ref(127);
+    const minLVol = 0;
+    const maxLVol = 255;
 
     // light volume slider lable
     const lVLabel = computed(() => {
@@ -273,95 +306,93 @@ export default defineComponent({
       hue: 50,
     });
 
-    // default rgb color
-    const rgb = ref(<number[]>Convert.hsl.rgb(50, 100, 50));
-
     // action flag
     const act = ref(true);
 
-    const origColor = ref(<number[]>[]);
+    // const origColor = ref(<number[]>[]);
 
-    // triggle at color ring change
-    const onColorInput = (hue: number) => {
-      color.hue = hue; // for number to display on page.
-      // change fmode if not equal to 'C'
+    // // triggle at color ring change
+    // const onColorInput = (hue: number) => {
+    //   color.hue = hue; // for number to display on page.
+    //   // change fmode if not equal to 'C'
 
-      // let origCol = new Array(3)
-      origColor.value = Convert.hsl.rgb([hue, 100, 50]); // convert color from hsl to rgb
-      rgb.value = reblend(origColor.value);
+    //   // let origCol = new Array(3)
+    //   origColor.value = Convert.hsl.rgb([hue, 100, 50]); // convert color from hsl to rgb
+    //   rgb.value = reblend(origColor.value);
 
-      const command = encode('C', rgb.value[0], rgb.value[1], rgb.value[2]); // encode command to DataView
-      slowSend(command); // send
-    };
+    //   const command = encode('C', rgb.value[0], rgb.value[1], rgb.value[2]); // encode command to DataView
+    //   slowSend(command); // send
+    // };
 
-    // reblend color. reduce rgb total from 0x1FF to FF
-    const reblend = (data: number[]) => {
-      const R = data[0];
-      const G = data[1];
-      const B = data[2];
+    // // reblend color. reduce rgb total from 0x1FF to FF
+    // const reblend = (data: number[]) => {
+    //   const R = data[0];
+    //   const G = data[1];
+    //   const B = data[2];
 
-      const sum = R + G + B;
-      if (sum === 255) {
-        return data;
-      }
+    //   const sum = R + G + B;
+    //   if (sum === 255) {
+    //     return data;
+    //   }
 
-      if (sum === 510) {
-        return [Math.floor(R / 2), Math.floor(G / 2), Math.floor(B / 2)];
-      }
+    //   if (sum === 510) {
+    //     return [Math.floor(R / 2), Math.floor(G / 2), Math.floor(B / 2)];
+    //   }
 
-      if (R === 255) {
-        if (G > 0) {
-          // B ===0
-          const bld = reCalc(R, G);
-          return [bld[0], bld[1], B];
-        } else {
-          // G === 0
-          const bld = reCalc(R, B);
-          return [bld[0], G, bld[1]];
-        }
-      } else if (G === 255) {
-        if (R > 0) {
-          // B=== 0
-          const bld = reCalc(G, R);
-          return [bld[1], bld[0], B];
-        } else {
-          // R === 0
-          const bld = reCalc(G, B);
-          return [R, bld[0], bld[1]];
-        }
+    //   if (R === 255) {
+    //     if (G > 0) {
+    //       // B ===0
+    //       const bld = reCalc(R, G);
+    //       return [bld[0], bld[1], B];
+    //     } else {
+    //       // G === 0
+    //       const bld = reCalc(R, B);
+    //       return [bld[0], G, bld[1]];
+    //     }
+    //   } else if (G === 255) {
+    //     if (R > 0) {
+    //       // B=== 0
+    //       const bld = reCalc(G, R);
+    //       return [bld[1], bld[0], B];
+    //     } else {
+    //       // R === 0
+    //       const bld = reCalc(G, B);
+    //       return [R, bld[0], bld[1]];
+    //     }
+    //   } else {
+    //     // B === 255
+    //     if (R > 0) {
+    //       const bld = reCalc(B, R);
+    //       return [bld[1], G, bld[0]];
+    //     } else {
+    //       // R===0
+    //       const bld = reCalc(B, G);
+    //       return [R, bld[1], bld[0]];
+    //     }
+    //   }
+    // };
+
+    // const reCalc = (FF: number, Small: number) => {
+    //   const MinusNumber = Math.ceil(Small / 2);
+    //   return [FF - MinusNumber, Small - MinusNumber];
+    // };
+
+    // on light volume and wblance change
+    const onWBLChange = () => {
+      const percent = lVVal.value / maxLVol;
+
+      const realVal = Math.floor(wBVal.value * percent);
+
+      if (wBVal.value > 0) {
+        wBFin.value = [realVal, 0];
       } else {
-        // B === 255
-        if (R > 0) {
-          const bld = reCalc(B, R);
-          return [bld[1], G, bld[0]];
-        } else {
-          // R===0
-          const bld = reCalc(B, G);
-          return [R, bld[1], bld[0]];
-        }
+        // < 0
+        wBFin.value = [0, -realVal];
       }
-    };
 
-    const reCalc = (FF: number, Small: number) => {
-      const MinusNumber = Math.ceil(Small / 2);
-      return [FF - MinusNumber, Small - MinusNumber];
-    };
-
-    // on light volume change
-    const onLChange = (val: number | null) => {
-      if (val === null) return false;
-      // when change light Volume, no fmode is matched.
-      // prepare command dataView
-      console.log(val);
-      const command = encode('W', val);
-      if (val === 0 || val === 255) {
-        // send immediate
-        setTimeout(() => {
-          send(command);
-        }, 100);
-      } else {
-        slowSend(command);
-      }
+      const comm = encode('WB', ...wBFin.value, lVVal.value);
+      send(comm);
+      slowSend(comm);
     };
 
     // 已经连接蓝牙设备服务
@@ -469,11 +500,11 @@ export default defineComponent({
       // send(command);
     };
 
-    const colorSelect = (hue: number) => {
-      // send color
-      onColorInput(hue);
-      // console.log('select');
-    };
+    // const colorSelect = (hue: number) => {
+    //   // send color
+    //   onColorInput(hue);
+    //   // console.log('select');
+    // };
 
     // mem-mode
     const setCurrBtn = (btn: BtnMode) => {
@@ -484,34 +515,49 @@ export default defineComponent({
     //
     const wBValCountDown = ({ ...newInfo }) => {
       //
-      if (wBVal.value < -254) return null;
+      if (wBVal.value <= -maxWBVal) return null;
       const { repeatCount } = newInfo;
       wBVal.value -= repeatCount;
+      onWBLChange();
     };
     const wBValCountUp = ({ ...newInfo }) => {
       //
-      if (wBVal.value > 254) return null;
+      if (wBVal.value >= maxWBVal) return null;
       const { repeatCount } = newInfo;
       wBVal.value += repeatCount;
+      onWBLChange();
     };
 
     //
     const lValCountDown = ({ ...newInfo }) => {
       //
-      if (lVVal.value < 1) return null;
+      if (lVVal.value <= minLVol) return null;
       const { repeatCount } = newInfo;
       lVVal.value -= repeatCount;
+      onWBLChange();
     };
     const lValCountUp = ({ ...newInfo }) => {
       //
-      if (lVVal.value > 254) return null;
+      if (lVVal.value >= maxLVol) return null;
       const { repeatCount } = newInfo;
       lVVal.value += repeatCount;
+      onWBLChange();
     };
 
-    const stopInterval = () => {
-      clearInterval();
+    const getBtnStyle = (btn: BtnMode) => {
+      if (btn.index === currBtn.value.index) {
+        return 'green-3';
+      }
+      if (btn.stat === true) {
+        return 'blue-4';
+      } else {
+        return 'grey-6';
+      }
     };
+
+    // const stopInterval = () => {
+    //   clearInterval();
+    // };
 
     // onBeforeMount(init);
     // onMounted(getConnDev);
@@ -524,32 +570,35 @@ export default defineComponent({
     return {
       currBtn,
       memMode,
-      hex,
       tuneFlag,
       markerLable,
-      origColor,
       bleSrvs,
       currDev,
       error,
       color,
       rgb,
-      lVVal, // light volume, luminosity
+      maxWBVal,
+      minLVol, // min light Volume
+      maxLVol, // max light Volume
+      lVVal, // light volume value, luminosity
       lVLabel,
       wBVal,
       wBLabel,
       btnMems,
+      wBFin,
+      btnGrp1,
+      btnGrp2,
       setMode,
-      onColorInput,
-      onLChange,
+      onWBLChange,
       getDev,
-      colorSelect,
       // mem-mode
       setCurrBtn,
       wBValCountDown,
       wBValCountUp,
       lValCountDown,
       lValCountUp,
-      stopInterval,
+      getBtnStyle,
+      // stopInterval,
     };
   },
 });
@@ -602,5 +651,6 @@ export default defineComponent({
 .btn-grp {
   position: absolute;
   bottom: 35px;
+  width: 95%;
 }
 </style>
