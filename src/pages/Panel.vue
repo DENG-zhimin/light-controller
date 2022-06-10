@@ -33,6 +33,7 @@
             no-footer
             class="my-picker"
             :disable="tuneFlag"
+            @update:model-value="onColorUpdate"
           />
         </div>
         <!-- <q-space></q-space> -->
@@ -134,39 +135,50 @@
           </div>
         </div>
 
-        <div class="q-mb-lg shadow-1 q-pa-sm btn-grp">
+        <div class="shadow-1 q-pa-sm btn-grp">
           <div class="row justify-evenly">
-            <q-btn size="sm" @click="tuneFlag = false"> TUNE</q-btn>
-            <q-btn size="sm"> CONFIRM</q-btn>
+            <!-- <q-btn size="sm" @click="tuneFlag = !tuneFlag"> TUNE</q-btn> -->
+            <q-btn
+              flat
+              size="sm"
+              @click="currBtn.stat = !currBtn.stat"
+              :class="currBtn.stat ? 'bg-grey-6' : 'bg-blue-4'"
+            >
+              {{ currBtn.stat ? 'disable' : 'enable' }}
+            </q-btn>
+            <q-btn
+              flat
+              size="sm"
+              @click="saveMem"
+              color="white"
+              class="bg-blue-5"
+            >
+              SAVE
+            </q-btn>
           </div>
-          <div>
-            {{ rgb }}
-          </div>
-          <div>
-            {{ lVVal }}
-          </div>
-          <div>
-            {{ wBFin }}
-          </div>
-          <hr />
+
+          <!-- <hr /> -->
+          <q-separator class="q-my-sm"></q-separator>
           <div class="row justify-center q-gutter-x-md q-mb-sm">
             <q-btn
+              flat
               v-for="btn in btnGrp1"
               :key="btn.label"
               :label="btn.label"
               @click.stop="setCurrBtn(btn)"
-              :text-color="btn.label === currBtn.label ? 'grey-6' : 'grey-2'"
-              :color="getBtnStyle(btn)"
+              text-color="grey-2"
+              :class="getBtnStyle(btn)"
             />
           </div>
           <div class="row justify-center q-gutter-x-md">
             <q-btn
+              flat
               v-for="btn in btnGrp2"
               :key="btn.label"
               :label="btn.label"
               @click.stop="setCurrBtn(btn)"
-              :color="getBtnStyle(btn)"
-              :text-color="btn.label === currBtn.label ? 'grey-6' : 'grey-2'"
+              text-color="grey-2"
+              :class="getBtnStyle(btn)"
             />
           </div>
         </div>
@@ -216,7 +228,7 @@ import { BleClient, BleService } from '@capacitor-community/bluetooth-le';
 import { useRouter } from 'vue-router';
 import { useFlashStore, BtnMode } from 'src/stores/flashlight';
 import { storeToRefs } from 'pinia';
-import { bleDev, encode } from 'src/utils/util';
+import { bleDev, encode, parseRgb } from 'src/utils/util';
 
 export default defineComponent({
   name: 'PanelPage',
@@ -228,13 +240,13 @@ export default defineComponent({
     // var intervalHandler = 0;
 
     // color picker value
-    const rgb = ref('rgb(0,0,0)');
+    const rgb = ref('rgb(65,58,190)');
 
     // memery mode
     const memMode = ref('c'); // c: color, w: whitebalance
 
     // color picker status
-    const tuneFlag = ref(true); // default enabled
+    const tuneFlag = ref(false); // default enabled
 
     // const markerLable = (val: number) => `${val}%`;
     const markerLable = [
@@ -247,7 +259,7 @@ export default defineComponent({
     // Ble transparent transfer
 
     // current dev
-    const { currDev, currBtn, btnMems } = storeToRefs(flashStore);
+    const { currDev, currBtn, btnMems, sendInterval } = storeToRefs(flashStore);
 
     const btnGrp1 = computed(() => {
       const ret = <BtnMode[]>[];
@@ -312,17 +324,13 @@ export default defineComponent({
     // const origColor = ref(<number[]>[]);
 
     // // triggle at color ring change
-    // const onColorInput = (hue: number) => {
-    //   color.hue = hue; // for number to display on page.
-    //   // change fmode if not equal to 'C'
-
-    //   // let origCol = new Array(3)
-    //   origColor.value = Convert.hsl.rgb([hue, 100, 50]); // convert color from hsl to rgb
-    //   rgb.value = reblend(origColor.value);
-
-    //   const command = encode('C', rgb.value[0], rgb.value[1], rgb.value[2]); // encode command to DataView
-    //   slowSend(command); // send
-    // };
+    const onColorUpdate = (color: string | null) => {
+      if (color === null) return null;
+      const rgbVal = parseRgb(color); // arr
+      // const command = encode('TUNE', res[0], res[1], res[2]); // encode command to DataView
+      const command = encode('TUNE', ...rgbVal);
+      slowSend(command); // send
+    };
 
     // // reblend color. reduce rgb total from 0x1FF to FF
     // const reblend = (data: number[]) => {
@@ -391,7 +399,7 @@ export default defineComponent({
       }
 
       const comm = encode('WB', ...wBFin.value, lVVal.value);
-      send(comm);
+      directSend(comm);
       slowSend(comm);
     };
 
@@ -420,35 +428,38 @@ export default defineComponent({
     ]);
 
     const slowSend = async (dataView: DataView) => {
-      if (!currDev.value.deviceId) return null;
+      // if (!currDev.value.deviceId) return null;
       if (act.value === true) {
+        updateCurrBtn(dataView);
         act.value = false; // close send window
         // open send window after 100ms
         setTimeout(() => {
           act.value = true;
-        }, 100);
-        // return if no currdev
-        if (!currDev.value.deviceId) return false;
-        await BleClient.write(
-          currDev.value.deviceId,
-          bleDev.tc.srvId,
-          bleDev.tc.characteristicId,
-          dataView
-        );
+        }, sendInterval.value);
+        bleSend(dataView);
       }
     };
 
-    const send = async (
-      dataView: DataView,
-      charId: string = bleDev.tc.characteristicId
-    ) => {
-      // return if no currdev
+    const directSend = (dataView: DataView) => {
+      // send after 100ms
+      setTimeout(() => {
+        bleSend(dataView);
+      }, 100);
+    };
+
+    const updateCurrBtn = (dataView: DataView) => {
+      currBtn.value.P1 = dataView.getUint8(2);
+      currBtn.value.P2 = dataView.getUint8(3);
+      currBtn.value.P3 = dataView.getUint8(4);
+      currBtn.value.P4 = dataView.getUint8(5);
+    };
+    const bleSend = async (dataView: DataView) => {
       if (!currDev.value.deviceId) return null;
       // console.log('sended');
       await BleClient.write(
         currDev.value.deviceId,
         bleDev.tc.srvId,
-        charId,
+        bleDev.tc.characteristicId,
         dataView
       )
         .then((/* res */) => {
@@ -508,8 +519,9 @@ export default defineComponent({
 
     // mem-mode
     const setCurrBtn = (btn: BtnMode) => {
-      tuneFlag.value = true;
+      // tuneFlag.value = true;
       flashStore.setCurrBtn(btn);
+      rgb.value = 'rgb(' + btn.P1 + ',' + btn.P2 + ',' + btn.P3 + ')';
     };
 
     //
@@ -545,14 +557,20 @@ export default defineComponent({
     };
 
     const getBtnStyle = (btn: BtnMode) => {
+      let btnClass = '';
       if (btn.index === currBtn.value.index) {
-        return 'green-3';
+        btnClass += ' inset-shadow-down shadow-5';
       }
       if (btn.stat === true) {
-        return 'blue-4';
+        btnClass += ' bg-blue-4';
       } else {
-        return 'grey-6';
+        btnClass += ' bg-grey-6';
       }
+      return btnClass;
+    };
+
+    const saveMem = () => {
+      // dome something
     };
 
     // const stopInterval = () => {
@@ -598,7 +616,8 @@ export default defineComponent({
       lValCountDown,
       lValCountUp,
       getBtnStyle,
-      // stopInterval,
+      saveMem,
+      onColorUpdate,
     };
   },
 });
@@ -650,7 +669,7 @@ export default defineComponent({
 
 .btn-grp {
   position: absolute;
-  bottom: 35px;
+  bottom: 48px;
   width: 95%;
 }
 </style>

@@ -120,7 +120,6 @@ import SrvsList from './BleSrvs.vue';
 import { useFlashStore } from 'src/stores/flashlight';
 import { storeToRefs } from 'pinia';
 import { bleDev, encode } from 'src/utils/util';
-// import { bleDev } from 'src/utils/util';
 
 export default defineComponent({
   name: 'BleDev',

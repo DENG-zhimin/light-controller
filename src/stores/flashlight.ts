@@ -12,10 +12,13 @@ export interface BtnMode {
   P1: number;
   P2: number;
   P3: number;
+  P4: number;
+  P5: number;
 }
 
 export const useFlashStore = defineStore('FlashLight', {
   state: () => ({
+    sendInterval: 100, // 100ms
     currDev: <BleDevice>{
       name: '',
       deviceId: '',
@@ -93,6 +96,13 @@ export const useFlashStore = defineStore('FlashLight', {
     },
     setCurrBtn(btn: BtnMode) {
       this.currBtn = btn;
+    },
+    saveMem(index: number) {
+      if (index < 4) {
+        // save color mem
+      } else {
+        // save wb mem
+      }
     },
   },
 });

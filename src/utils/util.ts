@@ -5,7 +5,7 @@
 // import { def } from '@vue/shared';
 
 // eslint-disable-next-line
-export const formatTime = (date: Date) => {
+const formatTime = (date: Date) => {
   const year = date.getFullYear();
   const month = date.getMonth() + 1;
   const day = date.getDate();
@@ -20,12 +20,12 @@ export const formatTime = (date: Date) => {
   );
 };
 
-export const formatNumber = (n: number | string) => {
+const formatNumber = (n: number | string) => {
   n = n.toString();
   return n[1] ? n : '0' + n;
 };
 
-export const bleDev = {
+const bleDev = {
   tc: {
     srvId: '0000fdee-0000-1000-8000-00805f9b34fb',
     characteristicId: '0000fda1-0000-1000-8000-00805f9b34fb', //  write and notify
@@ -34,15 +34,20 @@ export const bleDev = {
   },
 };
 
-const commandCode = {
-  C: 1, // color
-  W: 4, // white
-  F1: 5, // flash 1
-  F2: 6, // flash 2
-  SOS: 7, // sos mode
-  MODE: 8, // button function settings
+type Comm = {
+  name: string;
+  val: number;
 };
-console.log(commandCode);
+
+const commandCode = <Comm[]>[
+  { name: 'TUNE', val: 1 },
+  { name: 'MEM1', val: 11 },
+  { name: 'MEM2', val: 12 },
+  { name: 'MEM3', val: 13 },
+  { name: 'MEM4', val: 14 },
+  { name: 'MEM5', val: 15 },
+  { name: 'MEM6', val: 16 },
+];
 
 /*
   encode command and params to dataview
@@ -50,19 +55,54 @@ console.log(commandCode);
   @param param1 number
   @param param2 number
   @param param3 number
+  @param param4 number
   return  DataView
  */
-export const encode = (comm: string, param1 = 0, param2 = 0, param3 = 0) => {
-  const header = 170;
-  const commVal = eval('commandCode.' + comm) as number;
-  const cs = header + commVal + param1 + param2 + param3;
-  const buf = new ArrayBuffer(6);
+const encode = (
+  comm: string,
+  param1 = 0,
+  param2 = 0,
+  param3 = 0,
+  param4 = 0,
+  param5 = 0
+) => {
+  const header = 170; // 0xAA
+
+  // get command code
+  let commVal = 0;
+  commandCode.forEach((el) => {
+    if (el.name === comm) commVal = el.val;
+  });
+
+  // get cs value
+  const cs = header + commVal + param1 + param2 + param3 + param4 + param5;
+  const buf = new ArrayBuffer(8);
   const dataView = new DataView(buf);
   dataView.setUint8(0, header);
   dataView.setUint8(1, commVal);
   dataView.setUint8(2, param1);
   dataView.setUint8(3, param2);
   dataView.setUint8(4, param3);
-  dataView.setUint8(5, cs);
+  dataView.setUint8(5, param4);
+  dataView.setUint8(6, param5);
+  dataView.setUint8(7, cs);
   return dataView;
 };
+
+/* parse rgb string into array
+  @param color color string, format: rgb(rrr,ggg,bbb)
+  @return arr format: [rrr,ggg,bbb]
+*/
+const parseRgb = (color: string) => {
+  let txt = color.replace(/rgb\(/g, ''); // delete 'rgb('
+  txt = txt.replace(/\)/g, ''); // delete ')'
+  const arr = txt.split(','); // change to arr
+  const res = <number[]>[];
+  arr.forEach((el) => {
+    const val = parseInt(el);
+    res.push(val);
+  });
+  return res;
+};
+
+export { formatTime, formatNumber, bleDev, encode, parseRgb };
