@@ -12,6 +12,8 @@ export default defineComponent({
   name: 'SettingsPage',
   setup() {
     //
+    // const ws = new WebSocket('ws://localhost:8000', 'tcp');
+    // console.log(ws);
   },
 });
 </script>

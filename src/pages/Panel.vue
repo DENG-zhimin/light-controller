@@ -135,33 +135,25 @@
           </div>
         </div>
 
-        <div class="shadow-1 q-pa-sm btn-grp">
-          <div class="row justify-evenly">
+        <div class="shadow-1 q-ma-sm btn-grp">
+          <div class="row justify-evenly q-mb-md q-pa-md bg-grey-5">
             <!-- <q-btn size="sm" @click="tuneFlag = !tuneFlag"> TUNE</q-btn> -->
             <q-btn
-              flat
               size="sm"
               @click="currBtn.stat = !currBtn.stat"
               :class="currBtn.stat ? 'bg-grey-6' : 'bg-blue-4'"
             >
               {{ currBtn.stat ? 'disable' : 'enable' }}
             </q-btn>
-            <q-btn
-              flat
-              size="sm"
-              @click="saveMem"
-              color="white"
-              class="bg-blue-5"
-            >
+            <q-btn size="sm" @click="saveMem" color="white" class="bg-blue-5">
               SAVE
             </q-btn>
           </div>
 
           <!-- <hr /> -->
-          <q-separator class="q-my-sm"></q-separator>
+          <!-- <q-separator class="q-my-sm"></q-separator> -->
           <div class="row justify-center q-gutter-x-md q-mb-sm">
             <q-btn
-              flat
               v-for="btn in btnGrp1"
               :key="btn.label"
               :label="btn.label"
@@ -170,9 +162,8 @@
               :class="getBtnStyle(btn)"
             />
           </div>
-          <div class="row justify-center q-gutter-x-md">
+          <div class="row justify-center q-pb-sm q-gutter-x-md">
             <q-btn
-              flat
               v-for="btn in btnGrp2"
               :key="btn.label"
               :label="btn.label"
@@ -195,7 +186,7 @@
               <div class="col-7 q-pl-md">{{ powerStat ? 'ON' : 'OFF' }}</div>
             </div> -->
             <div class="full-width row col-12 justify-center">
-              <div class="col-4 text-right">亮度：</div>
+              <div class="col-5 text-right">白光灯亮度：</div>
               <div class="col-7 q-pl-md">{{ lVVal }}</div>
             </div>
             <!--             <div class="full-width row col-12 justify-center">
@@ -203,7 +194,7 @@
               <div class="col-7 q-pl-md">{{ origColor }}</div>
             </div> -->
             <div class="full-width row col-12 justify-center">
-              <div class="col-4 text-right">RGB：</div>
+              <div class="col-5 text-right">RGB：</div>
               <div class="col-7 q-pl-md">{{ rgb }}</div>
             </div>
           </div>
@@ -398,9 +389,13 @@ export default defineComponent({
         wBFin.value = [0, -realVal];
       }
 
-      const comm = encode('WB', ...wBFin.value, lVVal.value);
-      directSend(comm);
-      slowSend(comm);
+      const comm = encode('WB', wBFin.value[0], 0, wBFin.value[1], lVVal.value);
+      // directSend(comm);
+      if (lVVal.value === 0 || lVVal.value === 255) {
+        directSend(comm);
+      } else {
+        slowSend(comm);
+      }
     };
 
     // 已经连接蓝牙设备服务
@@ -442,6 +437,7 @@ export default defineComponent({
 
     const directSend = (dataView: DataView) => {
       // send after 100ms
+      updateCurrBtn(dataView);
       setTimeout(() => {
         bleSend(dataView);
       }, 100);
@@ -452,6 +448,14 @@ export default defineComponent({
       currBtn.value.P2 = dataView.getUint8(3);
       currBtn.value.P3 = dataView.getUint8(4);
       currBtn.value.P4 = dataView.getUint8(5);
+      rgb.value =
+        'rgb(' +
+        dataView.getUint8(2) +
+        ',' +
+        dataView.getUint8(3) +
+        ',' +
+        dataView.getUint8(4) +
+        ')';
     };
     const bleSend = async (dataView: DataView) => {
       if (!currDev.value.deviceId) return null;
@@ -521,7 +525,25 @@ export default defineComponent({
     const setCurrBtn = (btn: BtnMode) => {
       // tuneFlag.value = true;
       flashStore.setCurrBtn(btn);
-      rgb.value = 'rgb(' + btn.P1 + ',' + btn.P2 + ',' + btn.P3 + ')';
+      // test if have P1 to P4 4 params
+      let pStat = 0;
+      for (let el in btn) {
+        const key = el.toString();
+        if (key.substring(0, 1) === 'P') {
+          pStat += 1;
+        }
+      }
+      if (pStat === 4) {
+        // have P1 to P4 4 params
+        rgb.value = 'rgb(' + btn.P1 + ',' + btn.P2 + ',' + btn.P3 + ')';
+        lVVal.value = btn.P4;
+        const percent = Math.ceil((lVVal.value / maxLVol) * 100) / 100;
+        wBVal.value = Math.ceil(btn.P1 / percent + (btn.P3 * -1) / percent); // calculate wBVal base on light value percent
+      } else {
+        rgb.value = 'rgb(0,0,0)';
+        lVVal.value = 0;
+        wBVal.value = 0;
+      }
     };
 
     //
