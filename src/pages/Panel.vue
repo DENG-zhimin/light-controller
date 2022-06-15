@@ -26,7 +26,7 @@
         class="col column full-width q-gutter-y-lg q-mb-lg items-center q-mt-sm"
       >
         <!-- <q-space></q-space> -->
-        <div v-if="currBtn.index < 4">
+        <div v-if="currBtn.index < totalMem / 2">
           <q-color
             v-model="rgb"
             no-header
@@ -38,7 +38,7 @@
         </div>
         <!-- <q-space></q-space> -->
         <div
-          v-if="currBtn.index > 3"
+          v-if="currBtn.index >= totalMem / 2"
           class="col-3 column full-width justify-between q-my-md"
         >
           <!-- white balance slider -->
@@ -227,11 +227,22 @@ export default defineComponent({
   setup() {
     const router = useRouter();
     const flashStore = useFlashStore();
-
     // var intervalHandler = 0;
 
+    // current dev
+    const { totalMem, currDev, currBtn, btnMems, sendInterval } =
+      storeToRefs(flashStore);
+
     // color picker value
-    const rgb = ref('rgb(65,58,190)');
+    const rgb = ref(
+      'rgb(' +
+        currBtn.value.P1 +
+        ',' +
+        currBtn.value.P2 +
+        ',' +
+        currBtn.value.P3 +
+        ')'
+    );
 
     // memery mode
     const memMode = ref('c'); // c: color, w: whitebalance
@@ -249,13 +260,11 @@ export default defineComponent({
     ];
     // Ble transparent transfer
 
-    // current dev
-    const { currDev, currBtn, btnMems, sendInterval } = storeToRefs(flashStore);
-
     const btnGrp1 = computed(() => {
       const ret = <BtnMode[]>[];
+      // console.log(btnMems);
       btnMems.value.forEach((e) => {
-        if (e.index < 4) {
+        if (e.index < totalMem.value / 2) {
           ret.push(e);
         }
       });
@@ -265,7 +274,7 @@ export default defineComponent({
     const btnGrp2 = computed(() => {
       const ret = <BtnMode[]>[];
       btnMems.value.forEach((e) => {
-        if (e.index > 3) {
+        if (e.index >= totalMem.value / 2) {
           ret.push(e);
         }
       });
@@ -593,6 +602,7 @@ export default defineComponent({
 
     const saveMem = () => {
       // dome something
+      flashStore.saveMem(currBtn.value);
     };
 
     // const stopInterval = () => {
@@ -608,6 +618,7 @@ export default defineComponent({
     });
 
     return {
+      totalMem, // total memory buttons number
       currBtn,
       memMode,
       tuneFlag,

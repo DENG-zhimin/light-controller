@@ -3,21 +3,35 @@ import {
   BleDevice,
   // BleService,
 } from '@capacitor-community/bluetooth-le';
+import { LocalStorage as LS } from 'quasar';
+import { computed } from 'vue';
 
 export interface BtnMode {
   label: string;
   index: number;
   stat: boolean;
-  // mode: string;
   P1: number;
   P2: number;
   P3: number;
   P4: number;
-  P5: number;
 }
+const totalMem = 6; // total memory key
+const btnMems = computed(() => {
+  const mems = <BtnMode[]>[];
+  for (let i = 0; i < totalMem; i++) {
+    const mem = <BtnMode>{};
+    mem.label = 'M' + (i + 1);
+    mem.index = i;
+    mem.stat = false;
+    mem.P1 = mem.P2 = mem.P3 = mem.P4 = 0;
+    mems.push(mem);
+  }
+  return mems;
+});
 
 export const useFlashStore = defineStore('FlashLight', {
   state: () => ({
+    totalMem, // total memory key
     sendInterval: 100, // 100ms
     currDev: <BleDevice>{
       name: '',
@@ -25,38 +39,7 @@ export const useFlashStore = defineStore('FlashLight', {
     },
     currBtn: <BtnMode>{},
     connectedDevs: <BleDevice[]>[],
-    btnMems: <BtnMode[]>[
-      {
-        label: 'M1',
-        index: 1,
-        stat: true,
-      },
-      {
-        label: 'M2',
-        index: 2,
-        stat: true,
-      },
-      {
-        label: 'M3',
-        index: 3,
-        stat: false,
-      },
-      {
-        label: 'M4',
-        index: 4,
-        stat: true,
-      },
-      {
-        label: 'M5',
-        index: 5,
-        stat: false,
-      },
-      {
-        label: 'M6',
-        index: 6,
-        stat: true,
-      },
-    ],
+    btnMems,
   }),
   getters: {
     // doubleCount: (state) => state.counter * 2,
@@ -70,6 +53,7 @@ export const useFlashStore = defineStore('FlashLight', {
       // this.currDev = ble;
       this.currDev.name = ble.name;
       this.currDev.deviceId = ble.deviceId;
+      // getMemInfo(ble.deviceId)
     },
     addConnected(ble: BleDevice) {
       this.connectedDevs.push(ble);
@@ -97,12 +81,20 @@ export const useFlashStore = defineStore('FlashLight', {
     setCurrBtn(btn: BtnMode) {
       this.currBtn = btn;
     },
-    saveMem(index: number) {
-      if (index < 4) {
-        // save color mem
-      } else {
-        // save wb mem
-      }
+    saveMem(btn: BtnMode) {
+      const devId = this.currDev.deviceId ? this.currDev.deviceId : 'default';
+      const key = devId + '.' + btn.index;
+      // LS.set(this.currDev.deviceId, JSON.stringify(this.btnMems));
+      LS.set(key, btn);
+      const stInfo = LS.getItem(key) as BtnMode;
+      console.log(stInfo);
     },
+    // saveMem(index: number) {
+    //   if (index < 4) {
+    //     // save color mem
+    //   } else {
+    //     // save wb mem
+    //   }
+    // },
   },
 });
