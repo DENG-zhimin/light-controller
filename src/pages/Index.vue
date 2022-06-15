@@ -20,11 +20,16 @@
       dense
       align="justify"
       indicator-color="transparent"
-      active-class="bg-grey-2 "
-      class="bg-grey-5 fixed-bottom text-grey-8 index-tab"
+      active-class="bg-grey-3 text-blue-4"
+      class="bg-grey-5 fixed-bottom index-tab text-grey-8"
     >
       <!-- narrow-indicator -->
-      <q-tab name="panel" icon="las la-sun" label="panel" />
+      <q-tab
+        name="panel"
+        active-color="blue-5"
+        icon="las la-sun"
+        label="panel"
+      />
       <q-tab name="settings" icon="las la-cog" label="Settings" />
     </q-tabs>
     <!-- </q-card> -->

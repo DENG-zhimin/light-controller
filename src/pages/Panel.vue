@@ -23,7 +23,7 @@
       </q-list>
 
       <div
-        class="col column full-width q-gutter-y-lg q-mb-lg items-center q-mt-sm"
+        class="col column justify-center full-width q-gutter-y-lg items-center q-mt-sm"
       >
         <!-- <q-space></q-space> -->
         <div v-if="currBtn.index < totalMem / 2">
@@ -36,13 +36,14 @@
             @update:model-value="onColorUpdate"
           />
         </div>
-        <!-- <q-space></q-space> -->
+
+        <!-- white balance sliders below -->
         <div
           v-if="currBtn.index >= totalMem / 2"
-          class="col-3 column full-width justify-between q-my-md"
+          class="col-6 column full-width justify-between q-my-md"
         >
           <!-- white balance slider -->
-          <div class="row items-center full-width">
+          <div class="row items-center full-width shadow-1 q-py-md q-px-sm">
             <!-- style="max-width: 500px" -->
             <div class="col-1 text-center q-pt-md">
               <q-btn
@@ -89,7 +90,7 @@
             </div>
           </div>
           <!-- light volume slider -->
-          <div class="row items-center full-width">
+          <div class="row items-center full-width shadow-1 q-py-md q-px-sm">
             <!-- style="max-width: 500px" -->
             <div class="col-1 text-center q-pt-md">
               <q-btn
@@ -135,60 +136,11 @@
           </div>
         </div>
 
-        <div class="shadow-1 q-ma-sm btn-grp">
-          <div class="row justify-evenly q-pa-md bg-grey-5">
-            <!-- <q-btn size="sm" @click="tuneFlag = !tuneFlag"> TUNE</q-btn> -->
-            <q-btn
-              size="sm"
-              @click="chgStat"
-              :class="currBtn.stat ? 'bg-grey-6' : 'bg-blue-4'"
-            >
-              {{ currBtn.stat ? 'disable' : 'enable' }}
-            </q-btn>
-            <q-btn
-              size="sm"
-              @click="saveMem"
-              color=" white"
-              :class="saveFlag ? 'bg-grey-6' : 'bg-blue-5'"
-              :disable="saveFlag"
-            >
-              SAVE
-            </q-btn>
-          </div>
-
-          <!-- <hr /> -->
-          <!-- <q-separator class="q-my-sm"></q-separator> -->
-          <div class="q-py-sm bg-grey-7">
-            <div class="row justify-center q-gutter-x-md q-mb-sm">
-              <q-btn
-                round
-                v-for="btn in btnGrp1"
-                :key="btn.label"
-                :label="btn.label"
-                @click.stop="setCurrBtn(btn)"
-                text-color="grey-2"
-                :class="getBtnStyle(btn)"
-              />
-            </div>
-            <div class="row justify-center q-gutter-x-md">
-              <q-btn
-                round
-                v-for="btn in btnGrp2"
-                :key="btn.label"
-                :label="btn.label"
-                @click.stop="setCurrBtn(btn)"
-                text-color="grey-2"
-                :class="getBtnStyle(btn)"
-              />
-            </div>
-          </div>
-        </div>
-
         <!-- params display window -->
         <div
           class="row q-pl-md q-mt-md q-mb-sm shadow-4 bg-grey-4 text-grey-7 q-py-sm display-box"
           style="width: 70%"
-          v-if="true"
+          v-if="false"
         >
           <div class="row item-center q-gutter-y-sm">
             <!-- <div class="full-width row col-12 justify-center">
@@ -207,6 +159,55 @@
               <div class="col-5 text-right">RGB：</div>
               <div class="col-7 q-pl-md">{{ rgb }}</div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="shadow-1 q-ma-sm btn-grp">
+        <div class="row justify-evenly q-pa-md bg-grey-5">
+          <!-- <q-btn size="sm" @click="tuneFlag = !tuneFlag"> TUNE</q-btn> -->
+          <q-btn
+            size="sm"
+            @click="chgStat"
+            :class="currBtn.stat ? 'bg-grey-6' : 'bg-blue-4'"
+          >
+            {{ currBtn.stat ? 'disable' : 'enable' }}
+          </q-btn>
+          <q-btn
+            size="sm"
+            @click="saveMem"
+            color=" white"
+            :class="saveFlag ? 'bg-grey-6' : 'bg-blue-5'"
+            :disable="saveFlag"
+          >
+            SAVE
+          </q-btn>
+        </div>
+
+        <!-- <hr /> -->
+        <!-- <q-separator class="q-my-sm"></q-separator> -->
+        <div class="q-py-sm bg-grey-7">
+          <div class="row justify-center q-gutter-x-md q-mb-sm">
+            <q-btn
+              round
+              v-for="btn in btnGrp1"
+              :key="btn.label"
+              :label="btn.label"
+              @click.stop="setCurrBtn(btn)"
+              text-color="grey-2"
+              :class="getBtnStyle(btn)"
+            />
+          </div>
+          <div class="row justify-center q-gutter-x-md">
+            <q-btn
+              round
+              v-for="btn in btnGrp2"
+              :key="btn.label"
+              :label="btn.label"
+              @click.stop="setCurrBtn(btn)"
+              text-color="grey-2"
+              :class="getBtnStyle(btn)"
+            />
           </div>
         </div>
       </div>
@@ -741,9 +742,9 @@ export default defineComponent({
 }
 
 .btn-grp {
-  position: absolute;
-  bottom: 48px;
-  width: 95%;
+  // position: absolute;
+  // bottom: 0px;
+  width: 96%;
 }
 
 .pushed {

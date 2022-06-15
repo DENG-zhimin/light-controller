@@ -47,6 +47,10 @@ const commandCode = <Comm[]>[
   { name: 'MEM4', val: 14 },
   { name: 'MEM5', val: 15 },
   { name: 'MEM6', val: 16 },
+  { name: 'MEM7', val: 17 },
+  { name: 'MEM8', val: 18 },
+  { name: 'MEM9', val: 19 },
+  { name: 'MEM10', val: 10 },
 ];
 
 /*
