@@ -140,12 +140,18 @@
             <!-- <q-btn size="sm" @click="tuneFlag = !tuneFlag"> TUNE</q-btn> -->
             <q-btn
               size="sm"
-              @click="currBtn.stat = !currBtn.stat"
+              @click="chgStat"
               :class="currBtn.stat ? 'bg-grey-6' : 'bg-blue-4'"
             >
               {{ currBtn.stat ? 'disable' : 'enable' }}
             </q-btn>
-            <q-btn size="sm" @click="saveMem" color="white" class="bg-blue-5">
+            <q-btn
+              size="sm"
+              @click="saveMem"
+              color=" white"
+              :class="saveFlag ? 'bg-grey-6' : 'bg-blue-5'"
+              :disable="saveFlag"
+            >
               SAVE
             </q-btn>
           </div>
@@ -209,6 +215,7 @@ import {
   defineComponent,
   ref,
   onMounted,
+  onBeforeUnmount,
   reactive,
   computed,
   // watch,
@@ -220,27 +227,30 @@ import { useRouter } from 'vue-router';
 import { useFlashStore, BtnMode } from 'src/stores/flashlight';
 import { storeToRefs } from 'pinia';
 import { bleDev, encode, parseRgb } from 'src/utils/util';
+import { useQuasar } from 'quasar';
 
 export default defineComponent({
   name: 'PanelPage',
   components: {},
   setup() {
+    const $q = useQuasar();
     const router = useRouter();
     const flashStore = useFlashStore();
     // var intervalHandler = 0;
 
     // current dev
-    const { totalMem, currDev, currBtn, btnMems, sendInterval } =
+    const { saveFlag, totalMem, currDev, currBtn, btnMems, sendInterval } =
       storeToRefs(flashStore);
 
     // color picker value
+    // default is the first memory
     const rgb = ref(
       'rgb(' +
-        currBtn.value.P1 +
+        btnMems.value[0].P1 +
         ',' +
-        currBtn.value.P2 +
+        btnMems.value[0].P2 +
         ',' +
-        currBtn.value.P3 +
+        btnMems.value[0].P3 +
         ')'
     );
 
@@ -326,6 +336,7 @@ export default defineComponent({
     // // triggle at color ring change
     const onColorUpdate = (color: string | null) => {
       if (color === null) return null;
+      saveFlag.value = false;
       const rgbVal = parseRgb(color); // arr
       // const command = encode('TUNE', res[0], res[1], res[2]); // encode command to DataView
       const command = encode('TUNE', ...rgbVal);
@@ -387,6 +398,7 @@ export default defineComponent({
 
     // on light volume and wblance change
     const onWBLChange = () => {
+      saveFlag.value = false;
       const percent = lVVal.value / maxLVol;
 
       const realVal = Math.floor(wBVal.value * percent);
@@ -499,6 +511,7 @@ export default defineComponent({
     const init = async () => {
       try {
         await BleClient.initialize();
+        // currBtn.value = btnMems.value[3]; // set first mem to be the default mem
         ble_enabled.value = await BleClient.isEnabled();
         await BleClient.startEnabledNotifications((enabled: boolean) => {
           ble_enabled.value = enabled;
@@ -509,7 +522,22 @@ export default defineComponent({
     };
 
     const getDev = () => {
-      router.push('/bledev');
+      if (saveFlag.value === false) {
+        $q.dialog({
+          dark: true,
+          title: 'Confirm',
+          message: 'Data changed! Leave without SAVE?',
+          persistent: true,
+          cancel: true,
+        })
+          .onOk(() => {
+            console.log('OK');
+            router.push('/bledev');
+          })
+          .onCancel(() => {
+            console.log('cancelled');
+          });
+      }
     };
 
     /*  const powerSwitch = () => {
@@ -534,24 +562,16 @@ export default defineComponent({
     const setCurrBtn = (btn: BtnMode) => {
       // tuneFlag.value = true;
       flashStore.setCurrBtn(btn);
-      // test if have P1 to P4 4 params
-      let pStat = 0;
-      for (let el in btn) {
-        const key = el.toString();
-        if (key.substring(0, 1) === 'P') {
-          pStat += 1;
-        }
-      }
-      if (pStat === 4) {
-        // have P1 to P4 4 params
-        rgb.value = 'rgb(' + btn.P1 + ',' + btn.P2 + ',' + btn.P3 + ')';
-        lVVal.value = btn.P4;
-        const percent = Math.ceil((lVVal.value / maxLVol) * 100) / 100;
-        wBVal.value = Math.ceil(btn.P1 / percent + (btn.P3 * -1) / percent); // calculate wBVal base on light value percent
+      // have P1 to P4 4 params
+      rgb.value = 'rgb(' + btn.P1 + ',' + btn.P2 + ',' + btn.P3 + ')';
+      lVVal.value = btn.P4;
+      const percent = Math.ceil((lVVal.value / maxLVol) * 100) / 100;
+      console.log(percent);
+      if (percent === 0) {
+        wBVal.value = 0; // white light is zero
       } else {
-        rgb.value = 'rgb(0,0,0)';
-        lVVal.value = 0;
-        wBVal.value = 0;
+        // calculate wBVal base on light value percent
+        wBVal.value = Math.ceil(btn.P1 / percent + (btn.P3 * -1) / percent);
       }
     };
 
@@ -600,8 +620,15 @@ export default defineComponent({
       return btnClass;
     };
 
+    const chgStat = () => {
+      saveFlag.value = false; // enable save button
+      currBtn.value.stat = !currBtn.value.stat; // change button status
+    };
+
     const saveMem = () => {
       // dome something
+      saveFlag.value = true; // disable save button
+      console.log('saved');
       flashStore.saveMem(currBtn.value);
     };
 
@@ -617,7 +644,12 @@ export default defineComponent({
       flashStore.setCurrBtn(btnMems.value[0]);
     });
 
+    onBeforeUnmount(() => {
+      //
+    });
+
     return {
+      saveFlag,
       totalMem, // total memory buttons number
       currBtn,
       memMode,
@@ -651,6 +683,7 @@ export default defineComponent({
       getBtnStyle,
       saveMem,
       onColorUpdate,
+      chgStat,
     };
   },
 });

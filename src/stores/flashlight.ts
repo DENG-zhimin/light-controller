@@ -31,6 +31,7 @@ const btnMems = computed(() => {
 
 export const useFlashStore = defineStore('FlashLight', {
   state: () => ({
+    saveFlag: true,
     totalMem, // total memory key
     sendInterval: 100, // 100ms
     currDev: <BleDevice>{
