@@ -136,7 +136,7 @@
         </div>
 
         <div class="shadow-1 q-ma-sm btn-grp">
-          <div class="row justify-evenly q-mb-md q-pa-md bg-grey-5">
+          <div class="row justify-evenly q-pa-md bg-grey-5">
             <!-- <q-btn size="sm" @click="tuneFlag = !tuneFlag"> TUNE</q-btn> -->
             <q-btn
               size="sm"
@@ -158,25 +158,29 @@
 
           <!-- <hr /> -->
           <!-- <q-separator class="q-my-sm"></q-separator> -->
-          <div class="row justify-center q-gutter-x-md q-mb-sm">
-            <q-btn
-              v-for="btn in btnGrp1"
-              :key="btn.label"
-              :label="btn.label"
-              @click.stop="setCurrBtn(btn)"
-              text-color="grey-2"
-              :class="getBtnStyle(btn)"
-            />
-          </div>
-          <div class="row justify-center q-pb-sm q-gutter-x-md">
-            <q-btn
-              v-for="btn in btnGrp2"
-              :key="btn.label"
-              :label="btn.label"
-              @click.stop="setCurrBtn(btn)"
-              text-color="grey-2"
-              :class="getBtnStyle(btn)"
-            />
+          <div class="q-py-sm bg-grey-7">
+            <div class="row justify-center q-gutter-x-md q-mb-sm">
+              <q-btn
+                round
+                v-for="btn in btnGrp1"
+                :key="btn.label"
+                :label="btn.label"
+                @click.stop="setCurrBtn(btn)"
+                text-color="grey-2"
+                :class="getBtnStyle(btn)"
+              />
+            </div>
+            <div class="row justify-center q-gutter-x-md">
+              <q-btn
+                round
+                v-for="btn in btnGrp2"
+                :key="btn.label"
+                :label="btn.label"
+                @click.stop="setCurrBtn(btn)"
+                text-color="grey-2"
+                :class="getBtnStyle(btn)"
+              />
+            </div>
           </div>
         </div>
 
@@ -241,18 +245,19 @@ export default defineComponent({
     // current dev
     const { saveFlag, totalMem, currDev, currBtn, btnMems, sendInterval } =
       storeToRefs(flashStore);
-
     // color picker value
     // default is the first memory
-    const rgb = ref(
-      'rgb(' +
-        btnMems.value[0].P1 +
-        ',' +
-        btnMems.value[0].P2 +
-        ',' +
-        btnMems.value[0].P3 +
-        ')'
-    );
+    // const rgb = ref('rgb(0,0,0)')
+    const rgb = ref('');
+    // const rgb = ref(
+    //   'rgb(' +
+    //     btnMems.value[0].P1 +
+    //     ',' +
+    //     btnMems.value[0].P2 +
+    //     ',' +
+    //     btnMems.value[0].P3 +
+    //     ')'
+    // );
 
     // memery mode
     const memMode = ref('c'); // c: color, w: whitebalance
@@ -284,7 +289,7 @@ export default defineComponent({
     const btnGrp2 = computed(() => {
       const ret = <BtnMode[]>[];
       btnMems.value.forEach((e) => {
-        if (e.index >= totalMem.value / 2) {
+        if (e.index >= totalMem.value / 2 && e.index < totalMem.value) {
           ret.push(e);
         }
       });
@@ -537,6 +542,8 @@ export default defineComponent({
           .onCancel(() => {
             console.log('cancelled');
           });
+      } else {
+        router.push('/bledev');
       }
     };
 
@@ -566,7 +573,6 @@ export default defineComponent({
       rgb.value = 'rgb(' + btn.P1 + ',' + btn.P2 + ',' + btn.P3 + ')';
       lVVal.value = btn.P4;
       const percent = Math.ceil((lVVal.value / maxLVol) * 100) / 100;
-      console.log(percent);
       if (percent === 0) {
         wBVal.value = 0; // white light is zero
       } else {
@@ -610,7 +616,7 @@ export default defineComponent({
     const getBtnStyle = (btn: BtnMode) => {
       let btnClass = '';
       if (btn.index === currBtn.value.index) {
-        btnClass += ' inset-shadow-down shadow-5';
+        btnClass += ' pushed';
       }
       if (btn.stat === true) {
         btnClass += ' bg-blue-4';
@@ -628,8 +634,7 @@ export default defineComponent({
     const saveMem = () => {
       // dome something
       saveFlag.value = true; // disable save button
-      console.log('saved');
-      flashStore.saveMem(currBtn.value);
+      flashStore.saveMems();
     };
 
     // const stopInterval = () => {
@@ -641,7 +646,9 @@ export default defineComponent({
     onMounted(function () {
       init();
       // set first btn to be the current btn
-      flashStore.setCurrBtn(btnMems.value[0]);
+      const memIndex =
+        currBtn.value.index === undefined ? 0 : currBtn.value.index;
+      setCurrBtn(btnMems.value[memIndex]);
     });
 
     onBeforeUnmount(() => {
@@ -737,5 +744,9 @@ export default defineComponent({
   position: absolute;
   bottom: 48px;
   width: 95%;
+}
+
+.pushed {
+  box-shadow: 0px 0px 1px 3px $grey-2;
 }
 </style>

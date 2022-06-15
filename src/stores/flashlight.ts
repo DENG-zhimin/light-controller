@@ -15,29 +15,38 @@ export interface BtnMode {
   P3: number;
   P4: number;
 }
-const totalMem = 6; // total memory key
+const currDev = <BleDevice>{
+  name: '',
+  deviceId: '',
+};
+const totalMem = 10; // total memory key
 const btnMems = computed(() => {
-  const mems = <BtnMode[]>[];
-  for (let i = 0; i < totalMem; i++) {
-    const mem = <BtnMode>{};
-    mem.label = 'M' + (i + 1);
-    mem.index = i;
-    mem.stat = false;
-    mem.P1 = mem.P2 = mem.P3 = mem.P4 = 0;
-    mems.push(mem);
+  let mems = <BtnMode[]>[];
+  const key = currDev.deviceId ? currDev.deviceId : 'default';
+  const lsMems = LS.getItem(key) as BtnMode[];
+  if (lsMems) {
+    mems = lsMems;
+  } else {
+    for (let i = 0; i < totalMem; i++) {
+      const mem = <BtnMode>{};
+      mem.label = 'M' + (i + 1);
+      mem.index = i;
+      mem.stat = false;
+      mem.P1 = mem.P2 = mem.P3 = mem.P4 = 0;
+      mems.push(mem);
+    }
   }
   return mems;
 });
+
+console.log(btnMems);
 
 export const useFlashStore = defineStore('FlashLight', {
   state: () => ({
     saveFlag: true,
     totalMem, // total memory key
     sendInterval: 100, // 100ms
-    currDev: <BleDevice>{
-      name: '',
-      deviceId: '',
-    },
+    currDev,
     currBtn: <BtnMode>{},
     connectedDevs: <BleDevice[]>[],
     btnMems,
@@ -82,13 +91,21 @@ export const useFlashStore = defineStore('FlashLight', {
     setCurrBtn(btn: BtnMode) {
       this.currBtn = btn;
     },
-    saveMem(btn: BtnMode) {
+
+    // save single button
+    // saveMem(btn: BtnMode) {
+    //   const devId = this.currDev.deviceId ? this.currDev.deviceId : 'default';
+    //   const key = devId + '.' + btn.index;
+    //   // LS.set(this.currDev.deviceId, JSON.stringify(this.btnMems));
+    //   LS.set(key, btn);
+    //   const stInfo = LS.getItem(key) as BtnMode;
+    //   console.log(stInfo);
+    // },
+
+    saveMems() {
       const devId = this.currDev.deviceId ? this.currDev.deviceId : 'default';
-      const key = devId + '.' + btn.index;
       // LS.set(this.currDev.deviceId, JSON.stringify(this.btnMems));
-      LS.set(key, btn);
-      const stInfo = LS.getItem(key) as BtnMode;
-      console.log(stInfo);
+      LS.set(devId, this.btnMems);
     },
     // saveMem(index: number) {
     //   if (index < 4) {
