@@ -534,6 +534,9 @@ export default defineComponent({
         // calculate wBVal base on light value percent
         wBVal.value = Math.ceil(btn.P1 / percent + (btn.P3 * -1) / percent);
       }
+      // send command to device
+      const comm = encode('TUNE', btn.P1, btn.P2, btn.P3, btn.P4);
+      directSend(comm);
     };
 
     //
