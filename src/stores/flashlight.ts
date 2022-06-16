@@ -105,14 +105,8 @@ export const useFlashStore = defineStore('FlashLight', {
     saveMems() {
       const devId = this.currDev.deviceId ? this.currDev.deviceId : 'default';
       // LS.set(this.currDev.deviceId, JSON.stringify(this.btnMems));
+      console.log(this.btnMems);
       LS.set(devId, this.btnMems);
     },
-    // saveMem(index: number) {
-    //   if (index < 4) {
-    //     // save color mem
-    //   } else {
-    //     // save wb mem
-    //   }
-    // },
   },
 });

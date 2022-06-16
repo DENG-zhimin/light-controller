@@ -41,16 +41,16 @@ type Comm = {
 
 const commandCode = <Comm[]>[
   { name: 'TUNE', val: 1 },
-  { name: 'MEM1', val: 11 },
-  { name: 'MEM2', val: 12 },
-  { name: 'MEM3', val: 13 },
-  { name: 'MEM4', val: 14 },
-  { name: 'MEM5', val: 15 },
-  { name: 'MEM6', val: 16 },
-  { name: 'MEM7', val: 17 },
-  { name: 'MEM8', val: 18 },
-  { name: 'MEM9', val: 19 },
-  { name: 'MEM10', val: 10 },
+  { name: 'SAVEMEM', val: 2 },
+  /* { name: 'M2', val: 12 },
+  { name: 'M3', val: 13 },
+  { name: 'M4', val: 14 },
+  { name: 'M5', val: 15 },
+  { name: 'M6', val: 16 },
+  { name: 'M7', val: 17 },
+  { name: 'M8', val: 18 },
+  { name: 'M9', val: 19 },
+  { name: 'M10', val: 10 }, */
 ];
 
 /*
@@ -68,7 +68,8 @@ const encode = (
   param2 = 0,
   param3 = 0,
   param4 = 0,
-  param5 = 0
+  param5 = 0,
+  param6 = 0
 ) => {
   const header = 170; // 0xAA
 
@@ -78,9 +79,12 @@ const encode = (
     if (el.name === comm) commVal = el.val;
   });
 
+  // if (commVal === 0) return null;
+
   // get cs value
-  const cs = header + commVal + param1 + param2 + param3 + param4 + param5;
-  const buf = new ArrayBuffer(8);
+  const cs =
+    header + commVal + param1 + param2 + param3 + param4 + param5 + param6;
+  const buf = new ArrayBuffer(9);
   const dataView = new DataView(buf);
   dataView.setUint8(0, header);
   dataView.setUint8(1, commVal);
@@ -89,7 +93,8 @@ const encode = (
   dataView.setUint8(4, param3);
   dataView.setUint8(5, param4);
   dataView.setUint8(6, param5);
-  dataView.setUint8(7, cs);
+  dataView.setUint8(7, param6);
+  dataView.setUint8(8, cs);
   return dataView;
 };
 

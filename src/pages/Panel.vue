@@ -25,7 +25,7 @@
       <div
         class="col column justify-center full-width q-gutter-y-lg items-center q-mt-sm"
       >
-        <!-- <q-space></q-space> -->
+        <!-- color picker -->
         <div v-if="currBtn.index < totalMem / 2">
           <q-color
             v-model="rgb"
@@ -163,7 +163,7 @@
         </div>
       </div>
 
-      <div class="shadow-1 q-ma-sm btn-grp">
+      <div class="full-width shadow-2 btn-grp">
         <div class="row justify-evenly q-pa-md bg-grey-5">
           <!-- <q-btn size="sm" @click="tuneFlag = !tuneFlag"> TUNE</q-btn> -->
           <q-btn
@@ -184,9 +184,7 @@
           </q-btn>
         </div>
 
-        <!-- <hr /> -->
-        <!-- <q-separator class="q-my-sm"></q-separator> -->
-        <div class="q-py-sm bg-grey-7">
+        <div class="column justify-center q-py-sm bg-grey-7 q-px-sm">
           <div class="row justify-center q-gutter-x-md q-mb-sm">
             <q-btn
               round
@@ -345,62 +343,9 @@ export default defineComponent({
       saveFlag.value = false;
       const rgbVal = parseRgb(color); // arr
       // const command = encode('TUNE', res[0], res[1], res[2]); // encode command to DataView
-      const command = encode('TUNE', ...rgbVal);
-      slowSend(command); // send
+      const comm = encode('TUNE', ...rgbVal);
+      slowSend(comm); // send
     };
-
-    // // reblend color. reduce rgb total from 0x1FF to FF
-    // const reblend = (data: number[]) => {
-    //   const R = data[0];
-    //   const G = data[1];
-    //   const B = data[2];
-
-    //   const sum = R + G + B;
-    //   if (sum === 255) {
-    //     return data;
-    //   }
-
-    //   if (sum === 510) {
-    //     return [Math.floor(R / 2), Math.floor(G / 2), Math.floor(B / 2)];
-    //   }
-
-    //   if (R === 255) {
-    //     if (G > 0) {
-    //       // B ===0
-    //       const bld = reCalc(R, G);
-    //       return [bld[0], bld[1], B];
-    //     } else {
-    //       // G === 0
-    //       const bld = reCalc(R, B);
-    //       return [bld[0], G, bld[1]];
-    //     }
-    //   } else if (G === 255) {
-    //     if (R > 0) {
-    //       // B=== 0
-    //       const bld = reCalc(G, R);
-    //       return [bld[1], bld[0], B];
-    //     } else {
-    //       // R === 0
-    //       const bld = reCalc(G, B);
-    //       return [R, bld[0], bld[1]];
-    //     }
-    //   } else {
-    //     // B === 255
-    //     if (R > 0) {
-    //       const bld = reCalc(B, R);
-    //       return [bld[1], G, bld[0]];
-    //     } else {
-    //       // R===0
-    //       const bld = reCalc(B, G);
-    //       return [R, bld[1], bld[0]];
-    //     }
-    //   }
-    // };
-
-    // const reCalc = (FF: number, Small: number) => {
-    //   const MinusNumber = Math.ceil(Small / 2);
-    //   return [FF - MinusNumber, Small - MinusNumber];
-    // };
 
     // on light volume and wblance change
     const onWBLChange = () => {
@@ -416,8 +361,13 @@ export default defineComponent({
         wBFin.value = [0, -realVal];
       }
 
-      const comm = encode('WB', wBFin.value[0], 0, wBFin.value[1], lVVal.value);
-      // directSend(comm);
+      const comm = encode(
+        'TUNE',
+        wBFin.value[0],
+        0,
+        wBFin.value[1],
+        lVVal.value
+      );
       if (lVVal.value === 0 || lVVal.value === 255) {
         directSend(comm);
       } else {
@@ -463,8 +413,12 @@ export default defineComponent({
     };
 
     const directSend = (dataView: DataView) => {
+      const code = dataView.getUint8(1); // command code
+      if (code === 1) {
+        // 1: TUNE
+        updateCurrBtn(dataView);
+      }
       // send after 100ms
-      updateCurrBtn(dataView);
       setTimeout(() => {
         bleSend(dataView);
       }, 100);
@@ -636,6 +590,20 @@ export default defineComponent({
       // dome something
       saveFlag.value = true; // disable save button
       flashStore.saveMems();
+      btnMems.value.forEach((el) => {
+        // make command
+        const stat = el.stat === true ? 1 : 0;
+        const comm = encode(
+          'SAVEMEM',
+          el.index,
+          el.P1,
+          el.P2,
+          el.P3,
+          el.P4,
+          stat
+        );
+        directSend(comm);
+      });
     };
 
     // const stopInterval = () => {
@@ -742,12 +710,9 @@ export default defineComponent({
 }
 
 .btn-grp {
-  // position: absolute;
-  // bottom: 0px;
-  width: 96%;
+  border: solid 1px $grey-3;
 }
-
 .pushed {
-  box-shadow: 0px 0px 1px 3px $grey-2;
+  box-shadow: 0px 0px 1px 2px $yellow-3;
 }
 </style>
