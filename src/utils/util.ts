@@ -114,4 +114,15 @@ const parseRgb = (color: string) => {
   return res;
 };
 
-export { formatTime, formatNumber, bleDev, encode, parseRgb };
+/*
+  assemble rgb number to string
+  @param r red
+  @param g green
+  @param b blue
+  @return rgb 'rgb(r,g,b)'
+ */
+const assembleRgb = function (r: number, g: number, b: number): string {
+  return 'rgb(' + r.toString() + ',' + g.toString() + ',' + b.toString() + ')';
+};
+
+export { formatTime, formatNumber, bleDev, encode, parseRgb, assembleRgb };

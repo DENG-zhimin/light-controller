@@ -27,14 +27,98 @@
       >
         <!-- color picker -->
         <div v-if="currBtn.index < totalMem / 2">
-          <q-color
-            v-model="rgb"
-            no-header
-            no-footer
-            class="my-picker"
-            :disable="tuneFlag"
-            @update:model-value="onColorUpdate"
-          />
+          <color-picker v-bind="color" @input="onInput" />
+          <!-- sacturation slider -->
+          <div class="row items-center full-width shadow-1 q-py-md q-px-sm">
+            <!-- style="max-width: 500px" -->
+            <div class="col-1 text-center q-pt-md">
+              <q-btn
+                rounded
+                padding="none"
+                icon="las la-angle-left"
+                :disable="tuneFlag"
+                v-touch-repeat.mouse="lValCountDown"
+              />
+              <!-- @click="wBVal -= 1" -->
+            </div>
+            <div class="col-10 row items-center q-px-xs">
+              <!-- style="height: 100px" -->
+              <div class="full-width" style="position: relative">
+                <div class="q-mt-sm" :style="sacBarStyle"></div>
+                <q-slider
+                  v-model="sat"
+                  :min="0"
+                  :max="100"
+                  thumb-size="16px"
+                  thumb-color="grey-8"
+                  track-size="0px"
+                  track-color="transparent"
+                  color="transparent"
+                  label-color="grey-6"
+                  @update:model-value="onSatChange"
+                  :label-value="sat"
+                  :disable="tuneFlag"
+                  label-always
+                  style="top: -2px; position: absolute"
+                />
+              </div>
+            </div>
+            <div class="col-1 text-center q-pt-md">
+              <q-btn
+                rounded
+                padding="none"
+                icon="las la-angle-right"
+                :disable="tuneFlag"
+                v-touch-repeat.mouse="lValCountUp"
+              />
+            </div>
+          </div>
+
+          <!-- luminosity slider -->
+          <div class="row items-center full-width shadow-1 q-py-md q-px-sm">
+            <!-- style="max-width: 500px" -->
+            <div class="col-1 text-center q-pt-md">
+              <q-btn
+                rounded
+                padding="none"
+                icon="las la-angle-left"
+                :disable="tuneFlag"
+                v-touch-repeat.mouse="lValCountDown"
+              />
+              <!-- @click="wBVal -= 1" -->
+            </div>
+            <div class="col-10 row items-center q-px-xs">
+              <!-- style="height: 100px" -->
+              <div class="full-width" style="position: relative">
+                <div class="q-mt-sm" :style="lumiBarStyle"></div>
+                <q-slider
+                  v-model="lum"
+                  :min="0"
+                  :max="100"
+                  thumb-size="16px"
+                  thumb-color="grey-8"
+                  track-size="0px"
+                  track-color="transparent"
+                  color="transparent"
+                  label-color="grey-6"
+                  @update:model-value="onLumChange"
+                  :label-value="lum"
+                  :disable="tuneFlag"
+                  label-always
+                  style="top: -2px; position: absolute"
+                />
+              </div>
+            </div>
+            <div class="col-1 text-center q-pt-md">
+              <q-btn
+                rounded
+                padding="none"
+                icon="las la-angle-right"
+                :disable="tuneFlag"
+                v-touch-repeat.mouse="lValCountUp"
+              />
+            </div>
+          </div>
         </div>
 
         <!-- white balance sliders below -->
@@ -139,8 +223,8 @@
         <!-- params display window -->
         <div
           class="row q-pl-md q-mt-md q-mb-sm shadow-4 bg-grey-4 text-grey-7 q-py-sm display-box"
-          style="width: 70%"
-          v-if="false"
+          style="width: 100%"
+          v-show="true"
         >
           <div class="row item-center q-gutter-y-sm">
             <!-- <div class="full-width row col-12 justify-center">
@@ -148,16 +232,12 @@
               <div class="col-7 q-pl-md">{{ powerStat ? 'ON' : 'OFF' }}</div>
             </div> -->
             <div class="full-width row col-12 justify-center">
-              <div class="col-5 text-right">白光灯亮度：</div>
-              <div class="col-7 q-pl-md">{{ lVVal }}</div>
+              <div class="col-5 text-right">白光灯亮度：{{ lVVal }}</div>
+              <div class="col-7 q-pl-md">RGB：{{ rgb }}</div>
             </div>
-            <!--             <div class="full-width row col-12 justify-center">
-              <div class="col-4 text-right">RGB 1：</div>
-              <div class="col-7 q-pl-md">{{ origColor }}</div>
-            </div> -->
             <div class="full-width row col-12 justify-center">
-              <div class="col-5 text-right">RGB：</div>
-              <div class="col-7 q-pl-md">{{ rgb }}</div>
+              <div class="col-5 text-right">HSL: {{}}</div>
+              <div class="col-7 q-pl-md"></div>
             </div>
           </div>
         </div>
@@ -224,8 +304,8 @@ import {
   // watch,
 } from 'vue';
 import { BleClient, BleService } from '@capacitor-community/bluetooth-le';
-// import ColorPicker from '@radial-color-picker/vue-color-picker';
-// import Convert from 'color-convert';
+import ColorPicker from '@radial-color-picker/vue-color-picker';
+import Convert from 'color-convert';
 import { useRouter } from 'vue-router';
 import { useFlashStore, BtnMode } from 'src/stores/flashlight';
 import { storeToRefs } from 'pinia';
@@ -234,7 +314,7 @@ import { useQuasar } from 'quasar';
 
 export default defineComponent({
   name: 'PanelPage',
-  components: {},
+  components: { ColorPicker },
   setup() {
     const $q = useQuasar();
     const router = useRouter();
@@ -244,19 +324,70 @@ export default defineComponent({
     // current dev
     const { saveFlag, totalMem, currDev, currBtn, btnMems, sendInterval } =
       storeToRefs(flashStore);
-    // color picker value
-    // default is the first memory
     // const rgb = ref('rgb(0,0,0)')
     const rgb = ref('');
-    // const rgb = ref(
-    //   'rgb(' +
-    //     btnMems.value[0].P1 +
-    //     ',' +
-    //     btnMems.value[0].P2 +
-    //     ',' +
-    //     btnMems.value[0].P3 +
-    //     ')'
-    // );
+    const hue = ref(50);
+    const sat = ref(100);
+    const lum = ref(50);
+
+    const color = reactive({
+      hue: hue.value,
+      saturation: sat.value,
+      luminosity: lum.value,
+      alpha: 1,
+    });
+
+    const onInput = (newHue: number) => {
+      hue.value = newHue;
+    };
+
+    const onSatChange = (newSat: number | null) => {
+      if (newSat === null) return 0;
+      sat.value = newSat;
+      color.saturation = newSat;
+    };
+
+    const onLumChange = (newLum: number | null) => {
+      if (newLum === null) return 0;
+      lum.value = newLum;
+      color.luminosity = newLum;
+    };
+
+    // sactuation bar style
+    const sacBarStyle = computed(() => {
+      return (
+        'height: 20px; \
+        width: 100%; \
+        background-image: linear-gradient(to right,' +
+        '#' +
+        Convert.hsl.hex(hue.value, 0, lum.value) +
+        ',' +
+        '#' +
+        Convert.hsl.hex(hue.value, 50, lum.value) +
+        ',' +
+        '#' +
+        Convert.hsl.hex(hue.value, 100, lum.value)
+      );
+      (')');
+    });
+
+    // lumination bar style
+    const lumiBarStyle = computed(() => {
+      return (
+        'height: 20px; \
+        width: 100%; \
+        background-image: linear-gradient(to right,' +
+        '#' +
+        Convert.hsl.hex(hue.value, sat.value, 0) +
+        ',' +
+        '#' +
+        Convert.hsl.hex(hue.value, sat.value, 50) +
+        ',' +
+        '#' +
+        Convert.hsl.hex(hue.value, sat.value, 100)
+      );
+      (')');
+    });
 
     // memery mode
     const memMode = ref('c'); // c: color, w: whitebalance
@@ -328,9 +459,9 @@ export default defineComponent({
     });
 
     // light color
-    const color = reactive({
-      hue: 50,
-    });
+    // const color = reactive({
+    //   hue: 50,
+    // });
 
     // action flag
     const act = ref(true);
@@ -628,6 +759,11 @@ export default defineComponent({
     });
 
     return {
+      color,
+      sat,
+      lum,
+      lumiBarStyle,
+      sacBarStyle,
       saveFlag,
       totalMem, // total memory buttons number
       currBtn,
@@ -637,7 +773,7 @@ export default defineComponent({
       bleSrvs,
       currDev,
       error,
-      color,
+      // color,
       rgb,
       maxWBVal,
       minLVol, // min light Volume
@@ -650,6 +786,7 @@ export default defineComponent({
       wBFin,
       btnGrp1,
       btnGrp2,
+      onInput,
       setMode,
       onWBLChange,
       getDev,
@@ -663,13 +800,15 @@ export default defineComponent({
       saveMem,
       onColorUpdate,
       chgStat,
+      onSatChange,
+      onLumChange,
     };
   },
 });
 </script>
 
 <style lang="scss" scoped>
-// @import '@radial-color-picker/vue-color-picker/dist/vue-color-picker.css';
+@import '@radial-color-picker/vue-color-picker/dist/vue-color-picker.css';
 
 .dialog-frame {
   min-width: 300px;
@@ -718,4 +857,10 @@ export default defineComponent({
 .pushed {
   box-shadow: 0px 0px 1px 2px $yellow-3;
 }
+
+// .lu-bar {
+//   height: 20px;
+//   width: 100%;
+//   background-image: linear-gradient(to right, $lumiMin, $lumiMid, $lumiMax);
+// }
 </style>
