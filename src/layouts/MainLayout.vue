@@ -12,7 +12,24 @@
         </div>
         <q-space></q-space>
         <div>
-          <q-avatar />
+          <q-btn
+            flat
+            round
+            size="md"
+            v-if="currDev.deviceId"
+            color="blue"
+            icon="lab la-bluetooth-b"
+            @click="getDev"
+          />
+          <q-btn
+            flat
+            round
+            size="md"
+            v-else
+            color="grey-2"
+            icon="lab la-bluetooth-b"
+            @click="getDev"
+          />
         </div>
       </q-toolbar>
     </q-header>
@@ -46,6 +63,9 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import { useRouter } from 'vue-router';
+import { storeToRefs } from 'pinia';
+import { useFlashStore } from 'src/stores/flashlight';
+import { useQuasar } from 'quasar';
 
 export default defineComponent({
   name: 'MainLayout',
@@ -54,10 +74,35 @@ export default defineComponent({
 
   setup() {
     const router = useRouter();
+    const $q = useQuasar();
     const goHome = () => {
       router.push('/');
     };
-    return { goHome };
+    const FlashStore = useFlashStore();
+    const { currDev, saveFlag } = storeToRefs(FlashStore);
+
+    const getDev = () => {
+      if (saveFlag.value === false) {
+        $q.dialog({
+          dark: true,
+          title: 'Confirm',
+          message: 'Data changed! Leave without SAVE?',
+          persistent: true,
+          cancel: true,
+        })
+          .onOk(() => {
+            console.log('OK');
+            router.push('/bledev');
+          })
+          .onCancel(() => {
+            console.log('cancelled');
+          });
+      } else {
+        router.push('/bledev');
+      }
+    };
+
+    return { goHome, currDev, getDev };
   },
 });
 </script>
