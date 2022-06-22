@@ -6,26 +6,29 @@ import {
 import { LocalStorage as LS } from 'quasar';
 import { computed } from 'vue';
 
-export interface BtnMode {
-  label: string;
-  index: number;
-  stat: boolean;
-  P1: number;
-  P2: number;
-  P3: number;
-  P4: number;
-}
-
 export interface HSL {
   hue: number;
   sat: number;
   lum: number;
 }
+
 const hsl = <HSL>{
   hue: 50,
   sat: 100,
   lum: 50,
 };
+export interface BtnMode {
+  label: string;
+  index: number;
+  stat: boolean;
+  hsl: HSL;
+  wBVal: number;
+  // P1: number;
+  // P2: number;
+  // P3: number;
+  P4: number;
+}
+
 const currDev = <BleDevice>{
   name: '',
   deviceId: '',
@@ -43,7 +46,10 @@ const btnMems = computed(() => {
       mem.label = 'M' + (i + 1);
       mem.index = i;
       mem.stat = false;
-      mem.P1 = mem.P2 = mem.P3 = mem.P4 = 0;
+      // mem.P1 = mem.P2 = mem.P3 = 0
+      mem.P4 = 0;
+      mem.hsl = hsl;
+      mem.wBVal = 0;
       mems.push(mem);
     }
   }
@@ -58,6 +64,8 @@ export const useFlashStore = defineStore('FlashLight', {
     saveFlag: true,
     totalMem, // total memory key
     sendInterval: 100, // 100ms
+    maxLightVol: 255, // max light volume send to device
+    minLightVol: 0, // min light volume send to device
     currDev,
     currBtn: <BtnMode>{},
     connectedDevs: <BleDevice[]>[],

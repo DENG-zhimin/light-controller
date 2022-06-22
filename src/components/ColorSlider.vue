@@ -16,7 +16,7 @@
       <div class="full-width" style="position: relative">
         <div class="" :style="bgStyle"></div>
         <q-slider
-          v-model="value"
+          v-model="val"
           :min="min"
           :max="max"
           thumb-size="16px"
@@ -26,7 +26,7 @@
           color="transparent"
           label-color="grey-6"
           @update:model-value="onChange"
-          :label-value="value"
+          :label-value="val"
           :disable="disabled"
           label-always
           style="top: -2px; position: absolute"
@@ -45,7 +45,7 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref, computed } from 'vue';
+import { defineComponent, ref, computed, watch } from 'vue';
 import Convert from 'color-convert';
 // type HSL = [H: number, S: number, L: number];
 export default defineComponent({
@@ -53,7 +53,7 @@ export default defineComponent({
   props: {
     disabled: { type: Boolean, required: false, default: false },
     fixSaturation: { type: Boolean, required: false, default: true }, // fix saturation or fix luminosity
-    initVal: { type: Number, required: true, default: 50 },
+    initVal: { type: Number, required: true, default: 50 }, // initial slider value
     hue: { type: Number, required: false, default: 50 },
     sat: { type: Number, required: false, default: 100 },
     lum: { type: Number, required: false, default: 50 },
@@ -62,34 +62,35 @@ export default defineComponent({
   },
   emits: ['changed'],
   setup(props, ctx) {
-    const value = ref(props.initVal);
-    // const [hue, sat, lum] = ref(props.hsl) as HSL;
+    const val = ref(props.initVal);
+
+    watch(props, (newVal) => {
+      val.value = newVal.initVal;
+    });
 
     const countDown = ({ ...newInfo }) => {
       //
       const { repeatCount } = newInfo;
-      if (value.value - repeatCount <= props.min) {
-        value.value = props.min;
+      if (val.value - repeatCount <= props.min) {
+        val.value = props.min;
       } else {
-        value.value -= repeatCount;
+        val.value -= repeatCount;
       }
-      ctx.emit('changed', value.value);
+      ctx.emit('changed', val.value);
     };
 
     const countUp = ({ ...newInfo }) => {
-      //
       const { repeatCount } = newInfo;
-      if (value.value + repeatCount >= props.max) {
-        value.value = props.max;
+      if (val.value + repeatCount >= props.max) {
+        val.value = props.max;
       } else {
-        value.value += repeatCount;
+        val.value += repeatCount;
       }
-      ctx.emit('changed', value.value);
+      ctx.emit('changed', val.value);
     };
 
     const onChange = () => {
-      //
-      ctx.emit('changed', value.value);
+      ctx.emit('changed', val.value);
     };
 
     const hex = computed(() => {
@@ -124,11 +125,11 @@ export default defineComponent({
     });
 
     // onBeforeMount(()=>{
-    //   value.value = props.initVal
+    //   val.value = props.initVal
     // })
 
     return {
-      value,
+      val,
       bgStyle,
       countDown,
       countUp,

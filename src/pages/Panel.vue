@@ -17,21 +17,21 @@
               @select="onSelect"
             />
           </div>
-          <div class="row shadow-1">
+          <div class="row shadow-0">
             <!-- <div class="q-pt-sm q-pl-sm">饱和度:</div> -->
             <color-slider
-              v-model:initVal="hsl.sat"
+              :initVal="sat"
               :hue="hue"
-              :sat="hsl.sat"
+              :sat="sat"
               :lum="lum"
               :fixSaturation="false"
               @changed="onSatChange"
             />
           </div>
-          <div class="row shadow-1">
+          <div class="row shadow-0">
             <!-- <div class="q-pt-sm q-pl-sm">亮度:</div> -->
             <color-slider
-              v-model:initVal="lum"
+              :initVal="lum"
               :hue="hue"
               :sat="sat"
               :lum="lum"
@@ -95,7 +95,7 @@
           </div>
 
           <color-slider
-            :initVal="lVVal"
+            :initVal="lVol"
             :max="maxLVol"
             :min="minLVol"
             :hue="0"
@@ -117,7 +117,7 @@
               <div class="col-7 q-pl-md">{{ powerStat ? 'ON' : 'OFF' }}</div>
             </div> -->
             <div class="full-width row col-12 justify-center">
-              <div class="col-5 text-right">白光灯亮度：{{ lVVal }}</div>
+              <div class="col-5 text-right">白光灯亮度：{{ lVol }}</div>
             </div>
             <div class="full-width row col-12 justify-center">
               <div class="col-7 q-pl-md"></div>
@@ -206,7 +206,7 @@ export default defineComponent({
     // var intervalHandler = 0;
 
     // current dev
-    const { hsl, saveFlag, totalMem, currDev, currBtn, btnMems, sendInterval } =
+    const { saveFlag, totalMem, currDev, currBtn, btnMems, sendInterval } =
       storeToRefs(flashStore);
 
     const hue = ref(50);
@@ -249,7 +249,29 @@ export default defineComponent({
     };
 
     const onLVChange = (newVal: number) => {
-      lVVal.value = newVal;
+      saveFlag.value = false;
+      lVol.value = newVal;
+      let realVal = Math.floor((flashStore.maxLightVol * newVal) / 100);
+      if (realVal < flashStore.minLightVol) realVal = flashStore.minLightVol;
+      if (realVal > flashStore.maxLightVol) realVal = flashStore.maxLightVol;
+
+      let r = 0,
+        g = 0,
+        b = 0;
+
+      if (wBVal.value < 0) {
+        b = Math.floor((wBVal.value * newVal) / 100) * -1;
+      } else {
+        r = Math.floor((wBVal.value * newVal) / 100);
+      }
+
+      let lHsl = Convert.rgb.hsl(r, g, b);
+      hue.value = lHsl[0];
+      sat.value = lHsl[1];
+      lum.value = lHsl[2];
+
+      let comm = encode('TUNE', r, g, b, realVal);
+      slowSend(comm);
     };
 
     // color picker status
@@ -304,14 +326,14 @@ export default defineComponent({
       // return Math.round((lVolume.value / 255) * 100) + '%';
     });
 
-    // light volume value
-    const lVVal = ref(127);
+    // light volume
+    const lVol = ref(50);
     const minLVol = 0;
     const maxLVol = 100;
 
     // light volume slider lable
     const lVLabel = computed(() => {
-      return Math.round((lVVal.value / 255) * 100) + '%';
+      return Math.round((lVol.value / 255) * 100) + '%';
     });
 
     // light color
@@ -325,7 +347,7 @@ export default defineComponent({
     // on light volume and wblance change
     const onWBLChange = () => {
       saveFlag.value = false;
-      const percent = lVVal.value / maxLVol;
+      const percent = lVol.value / maxLVol;
 
       const realVal = Math.floor(wBVal.value * percent);
 
@@ -341,9 +363,9 @@ export default defineComponent({
         wBFin.value[0],
         0,
         wBFin.value[1],
-        lVVal.value
+        lVol.value
       );
-      if (lVVal.value === 0 || lVVal.value === 255) {
+      if (lVol.value === 0 || lVol.value === maxLVol) {
         directSend(comm);
       } else {
         slowSend(comm);
@@ -377,7 +399,7 @@ export default defineComponent({
     const slowSend = async (dataView: DataView) => {
       // if (!currDev.value.deviceId) return null;
       if (act.value === true) {
-        updateCurrBtn(dataView);
+        // updateCurrBtn();
         act.value = false; // close send window
         // open send window after 100ms
         setTimeout(() => {
@@ -391,7 +413,7 @@ export default defineComponent({
       const code = dataView.getUint8(1); // command code
       if (code === 1) {
         // 1: TUNE
-        updateCurrBtn(dataView);
+        // updateCurrBtn();
       }
       // send after 100ms
       setTimeout(() => {
@@ -399,30 +421,18 @@ export default defineComponent({
       }, 100);
     };
 
-    const updateCurrBtn = (dataView: DataView) => {
-      currBtn.value.P1 = dataView.getUint8(2);
-      currBtn.value.P2 = dataView.getUint8(3);
-      currBtn.value.P3 = dataView.getUint8(4);
-      currBtn.value.P4 = dataView.getUint8(5);
+    // const updateCurrBtn = () => {
 
-      // syncronize color picker
-      const btnHsl = Convert.rgb.hsl(
-        currBtn.value.P1,
-        currBtn.value.P2,
-        currBtn.value.P3
-      );
+    // };
 
-      color.hue = btnHsl[0];
-      hsl.value.sat = btnHsl[1];
-      hue.value = btnHsl[0];
-      sat.value = btnHsl[1];
-      lum.value = btnHsl[2];
-
-      console.log(hsl, currBtn.value);
-    };
+    // send comm to ble device
     const bleSend = async (dataView: DataView) => {
+      // update current button
+      currBtn.value.hsl = { hue: hue.value, sat: sat.value, lum: lum.value };
+      currBtn.value.P4 = lVol.value;
+      currBtn.value.wBVal = wBVal.value;
+
       if (!currDev.value.deviceId) return null;
-      // console.log('sended');
       await BleClient.write(
         currDev.value.deviceId,
         bleDev.tc.srvId,
@@ -466,20 +476,21 @@ export default defineComponent({
     // mem-mode
     const setCurrBtn = (btn: BtnMode) => {
       // syncronize light volume slider
-      lVVal.value = btn.P4;
-      // tuneFlag.value = true;
+      // update hsl
+      color.hue = btn.hsl.hue;
+      hue.value = btn.hsl.hue;
+      sat.value = btn.hsl.sat;
+      lum.value = btn.hsl.lum;
+      lVol.value = btn.P4;
+
       flashStore.setCurrBtn(btn);
 
-      lVVal.value = btn.P4;
-      const percent = Math.ceil((lVVal.value / maxLVol) * 100) / 100;
-      if (percent === 0) {
-        wBVal.value = 0; // white light is zero
-      } else {
-        // calculate wBVal base on light value percent
-        wBVal.value = Math.ceil(btn.P1 / percent + (btn.P3 * -1) / percent);
-      }
+      wBVal.value = btn.wBVal;
+
+      let lRgb = Convert.hsl.rgb(hue.value, sat.value, lum.value);
+
       // send command to device
-      const comm = encode('TUNE', btn.P1, btn.P2, btn.P3, btn.P4);
+      const comm = encode('TUNE', lRgb[0], lRgb[1], lRgb[2], btn.P4);
       directSend(comm);
     };
 
@@ -532,12 +543,13 @@ export default defineComponent({
       btnMems.value.forEach((el) => {
         // make command
         const stat = el.stat === true ? 1 : 0;
+        let lRgb = Convert.hsl.rgb(el.hsl.hue, el.hsl.sat, el.hsl.lum);
         const comm = encode(
           'SAVEMEM',
           el.index,
-          el.P1,
-          el.P2,
-          el.P3,
+          lRgb[0],
+          lRgb[1],
+          lRgb[2],
           el.P4,
           stat
         );
@@ -547,13 +559,30 @@ export default defineComponent({
 
     const onSatChange = (val: number) => {
       sat.value = val;
-
       color.saturation = val;
+
+      const tmpRgb = Convert.hsl.rgb(hue.value, val, lum.value);
+      const comm = encode('TUNE', ...tmpRgb);
+
+      if (val === 0 || val === 100) {
+        directSend(comm);
+      } else {
+        slowSend(comm);
+      }
     };
 
     const onLumChange = (val: number) => {
       lum.value = val;
       color.luminosity = val;
+
+      const tmpRgb = Convert.hsl.rgb(hue.value, sat.value, val);
+      const comm = encode('TUNE', ...tmpRgb);
+
+      if (val === 0 || val === 100) {
+        directSend(comm);
+      } else {
+        slowSend(comm);
+      }
     };
 
     // onMounted(getConnDev);
@@ -570,12 +599,11 @@ export default defineComponent({
     });
 
     return {
-      hsl,
       color,
       hue,
       sat,
       lum,
-      saveFlag,
+      saveFlag, // true: cannot save, false: can be saved
       totalMem, // total memory buttons number
       currBtn,
       tuneFlag,
@@ -587,7 +615,7 @@ export default defineComponent({
       maxWBVal,
       minLVol, // min light Volume
       maxLVol, // max light Volume
-      lVVal, // light volume value, luminosity
+      lVol, // light volume value, luminosity
       lVLabel,
       wBVal,
       wBLabel,
@@ -616,13 +644,6 @@ export default defineComponent({
 <style lang="scss" scoped>
 @import '@radial-color-picker/vue-color-picker/dist/vue-color-picker.css';
 
-.dialog-frame {
-  min-width: 300px;
-  min-height: 500px;
-  max-height: 80%;
-  max-width: 90%;
-}
-
 .display-box {
   border-radius: 8px;
   border: solid 1px $grey-1;
@@ -641,15 +662,6 @@ export default defineComponent({
   top: 0px;
   // margin: 0px auto;
 }
-.lv-bar {
-  height: 20px;
-  // background-color: #f00;
-  // background-image: linear-gradient(to right, #9494ff, #fff, #ff9494);
-  background-image: linear-gradient(to right, $grey-10, #fff);
-  position: absolute;
-  top: 0px;
-  // margin: 0px auto;
-}
 
 .my-slider {
   // margin: 0px auto;
@@ -663,10 +675,4 @@ export default defineComponent({
 .pushed {
   box-shadow: 0px 0px 1px 2px $yellow-3;
 }
-
-// .lu-bar {
-//   height: 20px;
-//   width: 100%;
-//   background-image: linear-gradient(to right, $lumiMin, $lumiMid, $lumiMax);
-// }
 </style>
