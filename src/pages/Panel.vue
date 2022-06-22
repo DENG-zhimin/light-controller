@@ -20,9 +20,9 @@
           <div class="row shadow-1">
             <!-- <div class="q-pt-sm q-pl-sm">饱和度:</div> -->
             <color-slider
-              :initVal="sat"
+              v-model:initVal="hsl.sat"
               :hue="hue"
-              :sat="sat"
+              :sat="hsl.sat"
               :lum="lum"
               :fixSaturation="false"
               @changed="onSatChange"
@@ -31,7 +31,7 @@
           <div class="row shadow-1">
             <!-- <div class="q-pt-sm q-pl-sm">亮度:</div> -->
             <color-slider
-              :initVal="lum"
+              v-model:initVal="lum"
               :hue="hue"
               :sat="sat"
               :lum="lum"
@@ -93,51 +93,16 @@
               />
             </div>
           </div>
-          <!-- light volume slider -->
-          <div class="row items-center full-width shadow-1 q-py-md q-px-sm">
-            <!-- style="max-width: 500px" -->
-            <div class="col-1 text-center q-pt-md">
-              <q-btn
-                rounded
-                padding="none"
-                icon="las la-angle-left"
-                :disable="tuneFlag"
-                v-touch-repeat.mouse="lValCountDown"
-              />
-              <!-- @click="wBVal -= 1" -->
-            </div>
-            <div class="col-10 row items-center q-px-xs">
-              <!-- style="height: 100px" -->
-              <div class="full-width" style="position: relative">
-                <div class="lv-bar full-width"></div>
-                <q-slider
-                  v-model="lVVal"
-                  :min="minLVol"
-                  :max="maxLVol"
-                  thumb-size="16px"
-                  thumb-color="grey-8"
-                  track-size="0px"
-                  track-color="transparent"
-                  color="transparent"
-                  label-color="grey-6"
-                  @update:model-value="onWBLChange"
-                  :label-value="lVLabel"
-                  :disable="tuneFlag"
-                  label-always
-                  style="top: -2px; position: absolute"
-                />
-              </div>
-            </div>
-            <div class="col-1 text-center q-pt-md">
-              <q-btn
-                rounded
-                padding="none"
-                icon="las la-angle-right"
-                :disable="tuneFlag"
-                v-touch-repeat.mouse="lValCountUp"
-              />
-            </div>
-          </div>
+
+          <color-slider
+            :initVal="lVVal"
+            :max="maxLVol"
+            :min="minLVol"
+            :hue="0"
+            :sat="0"
+            :lum="50"
+            @changed="onLVChange"
+          />
         </div>
 
         <!-- params display window -->
@@ -241,27 +206,18 @@ export default defineComponent({
     // var intervalHandler = 0;
 
     // current dev
-    const { saveFlag, totalMem, currDev, currBtn, btnMems, sendInterval } =
+    const { hsl, saveFlag, totalMem, currDev, currBtn, btnMems, sendInterval } =
       storeToRefs(flashStore);
+
     const hue = ref(50);
     const sat = ref(100);
     const lum = ref(50);
 
-    /* const hue = computed(()=>{
-      const hsl = Convert.rgb.hsl(currBtn.value.P1,currBtn.value.P2,currBtn.value.P3)
-      return hsl[0]
-    })
-
-
-    const sat = computed(()=>{
-      const hsl = Convert.rgb.hsl(currBtn.value.P1,currBtn.value.P2,currBtn.value.P3)
-      return hsl[1]
-    })
-
-    const lum = computed(()=>{
-      const hsl = Convert.rgb.hsl(currBtn.value.P1,currBtn.value.P2,currBtn.value.P3)
-      return hsl[2]
-    }) */
+    // const hsl = reactive({
+    //   hue: 50,
+    //   sat: 100,
+    //   lum: 50,
+    // });
 
     // color params for color-picker
     const color = reactive({
@@ -290,6 +246,10 @@ export default defineComponent({
       // encode to dataview
       const comm = encode('TUNE', ...rgbVal);
       directSend(comm); // send
+    };
+
+    const onLVChange = (newVal: number) => {
+      lVVal.value = newVal;
     };
 
     // color picker status
@@ -347,7 +307,7 @@ export default defineComponent({
     // light volume value
     const lVVal = ref(127);
     const minLVol = 0;
-    const maxLVol = 255;
+    const maxLVol = 100;
 
     // light volume slider lable
     const lVLabel = computed(() => {
@@ -444,6 +404,21 @@ export default defineComponent({
       currBtn.value.P2 = dataView.getUint8(3);
       currBtn.value.P3 = dataView.getUint8(4);
       currBtn.value.P4 = dataView.getUint8(5);
+
+      // syncronize color picker
+      const btnHsl = Convert.rgb.hsl(
+        currBtn.value.P1,
+        currBtn.value.P2,
+        currBtn.value.P3
+      );
+
+      color.hue = btnHsl[0];
+      hsl.value.sat = btnHsl[1];
+      hue.value = btnHsl[0];
+      sat.value = btnHsl[1];
+      lum.value = btnHsl[2];
+
+      console.log(hsl, currBtn.value);
     };
     const bleSend = async (dataView: DataView) => {
       if (!currDev.value.deviceId) return null;
@@ -490,16 +465,11 @@ export default defineComponent({
 
     // mem-mode
     const setCurrBtn = (btn: BtnMode) => {
-      console.log(btn);
-      // syncronize color picker
-      const hsl = Convert.rgb.hsl(btn.P1, btn.P2, btn.P3);
-      color.hue = hsl[0];
-      hue.value = hsl[0];
-      sat.value = hsl[1];
-      lum.value = hsl[2];
+      // syncronize light volume slider
+      lVVal.value = btn.P4;
       // tuneFlag.value = true;
       flashStore.setCurrBtn(btn);
-      // have P1 to P4 4 params
+
       lVVal.value = btn.P4;
       const percent = Math.ceil((lVVal.value / maxLVol) * 100) / 100;
       if (percent === 0) {
@@ -518,31 +488,22 @@ export default defineComponent({
       //
       if (wBVal.value <= -maxWBVal) return null;
       const { repeatCount } = newInfo;
-      console.log(repeatCount, wBVal.value, newInfo);
-      wBVal.value -= repeatCount;
+      if (wBVal.value - repeatCount <= -maxWBVal) {
+        wBVal.value = -maxWBVal;
+      } else {
+        wBVal.value -= repeatCount;
+      }
       onWBLChange();
     };
     const wBValCountUp = ({ ...newInfo }) => {
       //
       if (wBVal.value >= maxWBVal) return null;
       const { repeatCount } = newInfo;
-      wBVal.value += repeatCount;
-      onWBLChange();
-    };
-
-    //
-    const lValCountDown = ({ ...newInfo }) => {
-      //
-      if (lVVal.value <= minLVol) return null;
-      const { repeatCount } = newInfo;
-      lVVal.value -= repeatCount;
-      onWBLChange();
-    };
-    const lValCountUp = ({ ...newInfo }) => {
-      //
-      if (lVVal.value >= maxLVol) return null;
-      const { repeatCount } = newInfo;
-      lVVal.value += repeatCount;
+      if (wBVal.value + repeatCount >= maxWBVal) {
+        wBVal.value = maxWBVal;
+      } else {
+        wBVal.value += repeatCount;
+      }
       onWBLChange();
     };
 
@@ -586,6 +547,7 @@ export default defineComponent({
 
     const onSatChange = (val: number) => {
       sat.value = val;
+
       color.saturation = val;
     };
 
@@ -608,6 +570,7 @@ export default defineComponent({
     });
 
     return {
+      hsl,
       color,
       hue,
       sat,
@@ -634,13 +597,12 @@ export default defineComponent({
       btnGrp2,
       onInput,
       onSelect,
+      onLVChange,
       onWBLChange,
       // mem-mode
       setCurrBtn,
       wBValCountDown,
       wBValCountUp,
-      lValCountDown,
-      lValCountUp,
       getBtnStyle,
       saveMem,
       chgStat,

@@ -15,6 +15,17 @@ export interface BtnMode {
   P3: number;
   P4: number;
 }
+
+export interface HSL {
+  hue: number;
+  sat: number;
+  lum: number;
+}
+const hsl = <HSL>{
+  hue: 50,
+  sat: 100,
+  lum: 50,
+};
 const currDev = <BleDevice>{
   name: '',
   deviceId: '',
@@ -43,6 +54,7 @@ console.log(btnMems);
 
 export const useFlashStore = defineStore('FlashLight', {
   state: () => ({
+    hsl,
     saveFlag: true,
     totalMem, // total memory key
     sendInterval: 100, // 100ms
