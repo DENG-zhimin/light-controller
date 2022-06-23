@@ -205,6 +205,8 @@ export default defineComponent({
     const flashStore = useFlashStore();
     // var intervalHandler = 0;
 
+    const tuneFlag = ref(false); // default enabled
+
     // current dev
     const { saveFlag, totalMem, currDev, currBtn, btnMems, sendInterval } =
       storeToRefs(flashStore);
@@ -248,6 +250,7 @@ export default defineComponent({
       directSend(comm); // send
     };
 
+    // triggered by light volume slider
     const onLVChange = (newVal: number) => {
       saveFlag.value = false;
       lVol.value = newVal;
@@ -273,9 +276,6 @@ export default defineComponent({
       let comm = encode('TUNE', r, g, b, realVal);
       slowSend(comm);
     };
-
-    // color picker status
-    const tuneFlag = ref(false); // default enabled
 
     // const markerLable = (val: number) => `${val}%`;
     // const markerLable = [
@@ -315,7 +315,6 @@ export default defineComponent({
     // white balance
     const maxWBVal = 127;
     const wBVal = ref(0);
-    const wBFin = ref([0, 0]); // [red,blue]
 
     const wBLabel = computed(() => {
       let ret = wBVal.value;
@@ -331,45 +330,40 @@ export default defineComponent({
     const minLVol = 0;
     const maxLVol = 100;
 
-    // light volume slider lable
-    const lVLabel = computed(() => {
-      return Math.round((lVol.value / 255) * 100) + '%';
-    });
-
-    // light color
-    // const color = reactive({
-    //   hue: 50,
-    // });
-
     // action flag, to control the command sending frequency
     const act = ref(true);
 
     // on light volume and wblance change
     const onWBLChange = () => {
       saveFlag.value = false;
-      const percent = lVol.value / maxLVol;
 
-      const realVal = Math.floor(wBVal.value * percent);
+      let wBFin = parseWB(wBVal.value); // [r,g,b]
+      let lHsl = Convert.rgb.hsl(...wBFin);
+      hue.value = lHsl[0];
+      sat.value = lHsl[1];
+      lum.value = lHsl[2];
 
-      if (wBVal.value > 0) {
-        wBFin.value = [realVal, 0];
-      } else {
-        // < 0
-        wBFin.value = [0, -realVal];
-      }
-
-      const comm = encode(
-        'TUNE',
-        wBFin.value[0],
-        0,
-        wBFin.value[1],
-        lVol.value
-      );
+      const comm = encode('TUNE', ...wBFin, lVol.value);
       if (lVol.value === 0 || lVol.value === maxLVol) {
         directSend(comm);
       } else {
         slowSend(comm);
       }
+    };
+
+    // parse wBVal to rgb
+    const parseWB = (val: number) => {
+      const percent = lVol.value / maxLVol;
+
+      const realVal = Math.floor(val * percent);
+      const wBFin = <number[]>[0, 0, 0];
+      if (val > 0) {
+        wBFin[0] = realVal;
+      } else {
+        // < 0
+        wBFin[2] = -realVal;
+      }
+      return wBFin;
     };
 
     // 已经连接蓝牙设备服务
@@ -531,32 +525,26 @@ export default defineComponent({
       return btnClass;
     };
 
+    // change current button status
     const chgStat = () => {
       saveFlag.value = false; // enable save button
       currBtn.value.stat = !currBtn.value.stat; // change button status
     };
 
     const saveMem = () => {
-      // dome something
       saveFlag.value = true; // disable save button
       flashStore.saveMems();
       btnMems.value.forEach((el) => {
         // make command
         const stat = el.stat === true ? 1 : 0;
-        let lRgb = Convert.hsl.rgb(el.hsl.hue, el.hsl.sat, el.hsl.lum);
-        const comm = encode(
-          'SAVEMEM',
-          el.index,
-          lRgb[0],
-          lRgb[1],
-          lRgb[2],
-          el.P4,
-          stat
-        );
+        let lRgb = Convert.hsl.rgb(el.hsl.hue, el.hsl.sat, el.hsl.lum); // [r,g,b]
+
+        const comm = encode('SAVEMEM', el.index, ...lRgb, el.P4, stat);
         directSend(comm);
       });
     };
 
+    // saturation change
     const onSatChange = (val: number) => {
       sat.value = val;
       color.saturation = val;
@@ -571,6 +559,7 @@ export default defineComponent({
       }
     };
 
+    //  luminosity change
     const onLumChange = (val: number) => {
       lum.value = val;
       color.luminosity = val;
@@ -616,15 +605,13 @@ export default defineComponent({
       minLVol, // min light Volume
       maxLVol, // max light Volume
       lVol, // light volume value, luminosity
-      lVLabel,
       wBVal,
       wBLabel,
       btnMems,
-      wBFin,
-      btnGrp1,
-      btnGrp2,
-      onInput,
-      onSelect,
+      btnGrp1, // color mode button
+      btnGrp2, // white balance button
+      onInput, // color picker event
+      onSelect, // color picker event
       onLVChange,
       onWBLChange,
       // mem-mode
