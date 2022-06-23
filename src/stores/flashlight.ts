@@ -60,6 +60,7 @@ console.log(btnMems);
 
 export const useFlashStore = defineStore('FlashLight', {
   state: () => ({
+    orientLock: true,
     hsl,
     saveFlag: true,
     totalMem, // total memory key

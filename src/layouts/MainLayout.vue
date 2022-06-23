@@ -61,7 +61,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
+import { defineComponent, onBeforeMount } from 'vue';
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { useFlashStore } from 'src/stores/flashlight';
@@ -101,6 +101,10 @@ export default defineComponent({
         router.push('/bledev');
       }
     };
+
+    onBeforeMount(() => {
+      // console.log('quasar', $q);
+    });
 
     return { goHome, currDev, getDev };
   },
