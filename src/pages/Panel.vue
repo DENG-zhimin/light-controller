@@ -38,6 +38,15 @@
           </div>
         </div>
 
+        <div
+          v-if="currBtn.mode === 4"
+          class="column justify-center full-width bg-grey-9 full-height"
+        >
+          <div class="column text-h1 text-grey-3 text-center">
+            <i class="mdui-icon material-icons">&#xe25f;</i>
+          </div>
+        </div>
+
         <!-- white balance sliders below -->
         <div
           v-if="currBtn.mode === 3"

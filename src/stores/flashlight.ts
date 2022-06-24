@@ -33,6 +33,7 @@ const memModes = <MemMode[]>[
   { label: 'Disable', value: 0 },
   { label: 'Color', value: 2 },
   { label: 'W/B', value: 3 },
+  { label: 'Flash 1', value: 4 },
 ];
 
 const currDev = <BleDevice>{
