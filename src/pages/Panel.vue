@@ -275,7 +275,12 @@ export default defineComponent({
     const onLVChange = (newVal: number) => {
       saveFlag.value = false;
       lVol.value = newVal;
-      let realVal = Math.floor((flashStore.maxLightVol * newVal) / 100);
+
+      let percent = (lVol.value - minLVol) / (maxLVol - minLVol);
+      percent = Math.round(percent * 100) / 100;
+
+      let realVal = flashStore.maxLightVol * percent;
+
       if (realVal < flashStore.minLightVol) realVal = flashStore.minLightVol;
       if (realVal > flashStore.maxLightVol) realVal = flashStore.maxLightVol;
 
@@ -284,9 +289,9 @@ export default defineComponent({
         b = 0;
 
       if (wBVal.value < 0) {
-        b = Math.floor((wBVal.value * newVal) / 100) * -1;
+        b = Math.floor(wBVal.value * percent) * -1;
       } else {
-        r = Math.floor((wBVal.value * newVal) / 100);
+        r = Math.floor(wBVal.value * percent);
       }
 
       let lHsl = Convert.rgb.hsl(r, g, b);
@@ -364,8 +369,13 @@ export default defineComponent({
       sat.value = lHsl[1];
       lum.value = lHsl[2];
 
-      const comm = encode('TUNE', ...wBFin, lVol.value);
-      if (lVol.value === 0 || lVol.value === maxLVol) {
+      let percent = (lVol.value - minLVol) / (maxLVol - minLVol);
+      percent = Math.round(percent * 100) / 100;
+
+      let realLVol = flashStore.maxLightVol * percent;
+
+      const comm = encode('TUNE', ...wBFin, realLVol);
+      if (lVol.value === minLVol || lVol.value === maxLVol) {
         directSend(comm);
       } else {
         slowSend(comm);
