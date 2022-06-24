@@ -13,9 +13,9 @@ export interface HSL {
 }
 
 const hsl = <HSL>{
-  hue: 50,
+  hue: 0,
   sat: 100,
-  lum: 50,
+  lum: 0,
 };
 export interface BtnMode {
   label: string;
@@ -64,6 +64,11 @@ const btnMems = computed(() => {
       mems.push(mem);
     }
   }
+  // enable mem1
+  mems[0].hsl.hue = 50;
+  mems[0].hsl.lum = 50;
+  mems[0].mode = 2;
+
   return mems;
 });
 
