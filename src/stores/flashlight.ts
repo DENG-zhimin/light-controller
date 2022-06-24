@@ -12,11 +12,6 @@ export interface HSL {
   lum: number;
 }
 
-const hsl = <HSL>{
-  hue: 0,
-  sat: 100,
-  lum: 0,
-};
 export interface BtnMode {
   label: string;
   index: number;
@@ -53,21 +48,23 @@ const btnMems = computed(() => {
     mems = lsMems;
   } else {
     for (let i = 0; i < totalMem; i++) {
-      const mem = <BtnMode>{};
-      mem.label = 'M' + (i + 1);
-      mem.index = i;
-      mem.mode = 0;
-      // mem.P1 = mem.P2 = mem.P3 = 0
-      mem.P4 = 0;
-      mem.hsl = hsl;
-      mem.wBVal = 0;
+      const hsl = <HSL>{ hue: 50, sat: 100, lum: 0 };
+      let mode = 0; // default disabled
+      if (i === 0) {
+        hsl.lum = 50;
+        mode = 2; // color
+      }
+      const mem = <BtnMode>{
+        label: 'M' + (i + 1),
+        index: i,
+        mode: mode,
+        P4: 0,
+        hsl: hsl,
+        wBVal: 0,
+      };
       mems.push(mem);
     }
   }
-  // enable mem1
-  mems[0].hsl.hue = 50;
-  mems[0].hsl.lum = 50;
-  mems[0].mode = 2;
 
   return mems;
 });
@@ -77,7 +74,6 @@ console.log(btnMems);
 export const useFlashStore = defineStore('FlashLight', {
   state: () => ({
     orientLock: true,
-    hsl,
     saveFlag: true,
     totalMem, // total memory key
     sendInterval: 100, // 100ms
