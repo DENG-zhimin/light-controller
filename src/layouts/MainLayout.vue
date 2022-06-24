@@ -103,7 +103,7 @@ export default defineComponent({
     };
 
     onBeforeMount(() => {
-      // console.log('quasar', $q);
+      // console.log('quasar', window);
     });
 
     return { goHome, currDev, getDev };

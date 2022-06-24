@@ -20,7 +20,7 @@ const hsl = <HSL>{
 export interface BtnMode {
   label: string;
   index: number;
-  stat: boolean;
+  mode: number;
   hsl: HSL;
   wBVal: number;
   // P1: number;
@@ -28,6 +28,17 @@ export interface BtnMode {
   // P3: number;
   P4: number;
 }
+
+interface MemMode {
+  label: string;
+  value: number;
+}
+
+const memModes = <MemMode[]>[
+  { label: 'Disable', value: 0 },
+  { label: 'Color', value: 2 },
+  { label: 'W/B', value: 3 },
+];
 
 const currDev = <BleDevice>{
   name: '',
@@ -45,7 +56,7 @@ const btnMems = computed(() => {
       const mem = <BtnMode>{};
       mem.label = 'M' + (i + 1);
       mem.index = i;
-      mem.stat = false;
+      mem.mode = 0;
       // mem.P1 = mem.P2 = mem.P3 = 0
       mem.P4 = 0;
       mem.hsl = hsl;
@@ -71,6 +82,7 @@ export const useFlashStore = defineStore('FlashLight', {
     currBtn: <BtnMode>{},
     connectedDevs: <BleDevice[]>[],
     btnMems,
+    memModes,
   }),
   getters: {
     // doubleCount: (state) => state.counter * 2,

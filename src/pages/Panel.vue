@@ -5,10 +5,7 @@
         class="col column justify-center full-width q-gutter-y-md items-center"
       >
         <!-- color picker -->
-        <div
-          v-if="currBtn.index < totalMem / 2"
-          class="column q-gutter-y-md full-width"
-        >
+        <div v-if="currBtn.mode === 2" class="column q-gutter-y-md full-width">
           <div class="row justify-center">
             <color-picker
               v-bind="color"
@@ -43,11 +40,11 @@
 
         <!-- white balance sliders below -->
         <div
-          v-if="currBtn.index >= totalMem / 2"
+          v-if="currBtn.mode === 3"
           class="col-6 column full-width justify-between q-my-md"
         >
           <!-- white balance slider -->
-          <div class="row items-center full-width shadow-1 q-py-md q-px-sm">
+          <div class="row items-center full-width shadow-0 q-py-md q-px-sm">
             <!-- style="max-width: 500px" -->
             <div class="col-1 text-center q-pt-md">
               <q-btn
@@ -129,14 +126,21 @@
       <div class="full-width shadow-2 btn-grp">
         <div class="row justify-evenly q-pa-md bg-grey-5">
           <!-- <q-btn size="sm" @click="tuneFlag = !tuneFlag"> TUNE</q-btn> -->
+          <div class="row">
+            <q-select
+              dense
+              rounded
+              outlined
+              v-model="currBtn.mode"
+              :options="memModes"
+              map-options
+              emit-value
+              @update:model-value="onModeChanged"
+            />
+          </div>
+
           <q-btn
-            size="sm"
-            @click="chgStat"
-            :class="currBtn.stat ? 'bg-grey-6' : 'bg-blue-4'"
-          >
-            {{ currBtn.stat ? 'disable' : 'enable' }}
-          </q-btn>
-          <q-btn
+            rounded
             size="sm"
             @click="saveMem"
             color=" white"
@@ -193,14 +197,14 @@ import { storeToRefs } from 'pinia';
 import { bleDev, encode } from 'src/utils/util';
 import Convert from 'color-convert';
 // import { useRouter } from 'vue-router';
-// import { useQuasar } from 'quasar';
+import { useQuasar } from 'quasar';
 import ColorSlider from 'src/components/ColorSlider.vue';
 
 export default defineComponent({
   name: 'PanelPage',
   components: { ColorPicker, ColorSlider },
   setup() {
-    // const $q = useQuasar();
+    const $q = useQuasar();
     // const router = useRouter();
     const flashStore = useFlashStore();
     // var intervalHandler = 0;
@@ -208,8 +212,25 @@ export default defineComponent({
     const tuneFlag = ref(false); // default enabled
 
     // current dev
-    const { saveFlag, totalMem, currDev, currBtn, btnMems, sendInterval } =
-      storeToRefs(flashStore);
+    const {
+      saveFlag,
+      totalMem,
+      currDev,
+      currBtn,
+      btnMems,
+      sendInterval,
+      memModes,
+    } = storeToRefs(flashStore);
+
+    /* const totalEnabledMem = computed(() => {
+      let total = 0;
+      btnMems.value.forEach((el) => {
+        total += el.mode;
+      });
+      return total;
+    }); */
+
+    const preMode = ref(0);
 
     const hue = ref(50);
     const sat = ref(100);
@@ -471,6 +492,7 @@ export default defineComponent({
     const setCurrBtn = (btn: BtnMode) => {
       // syncronize light volume slider
       // update hsl
+      preMode.value = btn.mode;
       color.hue = btn.hsl.hue;
       hue.value = btn.hsl.hue;
       sat.value = btn.hsl.sat;
@@ -517,7 +539,7 @@ export default defineComponent({
       if (btn.index === currBtn.value.index) {
         btnClass += ' pushed';
       }
-      if (btn.stat === true) {
+      if (btn.mode > 0) {
         btnClass += ' bg-blue-4';
       } else {
         btnClass += ' bg-grey-6';
@@ -526,9 +548,33 @@ export default defineComponent({
     };
 
     // change current button status
-    const chgStat = () => {
-      saveFlag.value = false; // enable save button
-      currBtn.value.stat = !currBtn.value.stat; // change button status
+    const onModeChanged = (val: number) => {
+      if (val === 0) {
+        const total = chkMemModeTotal();
+
+        if (total > 0) {
+          saveFlag.value = false; // enable save button
+          preMode.value = val;
+        } else {
+          $q.notify({
+            message: 'Need at least one memory be enabled!',
+          });
+          currBtn.value.mode = preMode.value;
+        }
+      }
+    };
+
+    const setPreMode = () => {
+      preMode.value = currBtn.value.mode;
+      console.log(preMode.value);
+    };
+
+    const chkMemModeTotal = () => {
+      let total = 0;
+      btnMems.value.forEach((el) => {
+        total += el.mode;
+      });
+      return total;
     };
 
     const saveMem = () => {
@@ -536,16 +582,16 @@ export default defineComponent({
       flashStore.saveMems();
       btnMems.value.forEach((el) => {
         // make command
-        const stat = el.stat === true ? 1 : 0;
         let lRgb = Convert.hsl.rgb(el.hsl.hue, el.hsl.sat, el.hsl.lum); // [r,g,b]
 
-        const comm = encode('SAVEMEM', el.index, ...lRgb, el.P4, stat);
+        const comm = encode('SAVEMEM', el.index, ...lRgb, el.P4, el.mode);
         directSend(comm);
       });
     };
 
     // saturation change
     const onSatChange = (val: number) => {
+      saveFlag.value = false;
       sat.value = val;
       color.saturation = val;
 
@@ -561,6 +607,7 @@ export default defineComponent({
 
     //  luminosity change
     const onLumChange = (val: number) => {
+      saveFlag.value = false;
       lum.value = val;
       color.luminosity = val;
 
@@ -588,6 +635,7 @@ export default defineComponent({
     });
 
     return {
+      preMode,
       color,
       hue,
       sat,
@@ -608,6 +656,7 @@ export default defineComponent({
       wBVal,
       wBLabel,
       btnMems,
+      memModes,
       btnGrp1, // color mode button
       btnGrp2, // white balance button
       onInput, // color picker event
@@ -620,9 +669,10 @@ export default defineComponent({
       wBValCountUp,
       getBtnStyle,
       saveMem,
-      chgStat,
+      onModeChanged,
       onSatChange,
       onLumChange,
+      setPreMode,
     };
   },
 });
