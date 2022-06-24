@@ -192,7 +192,7 @@ import {
 } from 'vue';
 import { BleClient, BleService } from '@capacitor-community/bluetooth-le';
 import ColorPicker from '@radial-color-picker/vue-color-picker';
-import { useFlashStore, BtnMode, HSL } from 'src/stores/flashlight';
+import { useFlashStore, BtnMode } from 'src/stores/flashlight';
 import { storeToRefs } from 'pinia';
 import { bleDev, encode } from 'src/utils/util';
 import Convert from 'color-convert';
@@ -566,9 +566,10 @@ export default defineComponent({
           saveFlag.value = false; // enable save button
           preMode.value = val;
           // change color mode and w/b mode value to zero
-          let lHsl = <HSL>{ hue: 0, sat: 100, lum: 0 };
-          currBtn.value.hsl = lHsl;
+          currBtn.value.hsl.lum = 0;
           currBtn.value.P4 = 0;
+          lum.value = 0;
+          lVol.value = 0;
         } else {
           $q.notify({
             message: 'Need at least one memory be enabled!',
@@ -580,6 +581,15 @@ export default defineComponent({
         saveFlag.value = false; // enable save button
         preMode.value = val;
       }
+
+      // send to device
+      const lRgb = Convert.hsl.rgb(
+        currBtn.value.hsl.hue,
+        currBtn.value.hsl.sat,
+        currBtn.value.hsl.lum
+      );
+      const comm = encode('TUNE', ...lRgb, currBtn.value.P4);
+      directSend(comm);
     };
 
     const chkMemModeTotal = () => {
