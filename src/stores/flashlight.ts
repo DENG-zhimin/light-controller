@@ -70,8 +70,6 @@ const btnMems = computed(() => {
   return mems;
 });
 
-console.log(btnMems);
-
 export const useFlashStore = defineStore('FlashLight', {
   state: () => ({
     orientLock: true,
@@ -94,7 +92,7 @@ export const useFlashStore = defineStore('FlashLight', {
     // increment() {
     //   this.counter++;
     // },
-    setCurr(ble: BleDevice) {
+    setCurrDev(ble: BleDevice) {
       // this.currDev = ble;
       this.currDev.name = ble.name;
       this.currDev.deviceId = ble.deviceId;

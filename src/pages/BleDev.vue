@@ -314,7 +314,7 @@ export default defineComponent({
     };
 
     const setCurr = (ble: BleDevice) => {
-      bleStore.setCurr(ble);
+      bleStore.setCurrDev(ble);
     };
 
     const getInfo = (ble: BleDevice) => {
