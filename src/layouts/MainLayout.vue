@@ -4,7 +4,7 @@
       <q-toolbar class="bg-grey-7">
         <!-- <q-toolbar-title></q-toolbar-title> -->
         <div @click.stop="goHome">
-          <img src="~assets/logo.png" alt="AOI" style="width: 80px" />
+          <img src="" alt="AOI" style="width: 80px" />
         </div>
         <q-space></q-space>
         <div class="row justify-center text-bold q-mr-lg">
